@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+/*jshint esversion: 7 */
 const electron = require('electron');
 const url = require('url');
 const path = require('path');
@@ -15,9 +15,10 @@ app.on('ready', function () {
     //create a main window
     mainWindow = new BrowserWindow({
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false,
         },
-        titleBarStyle: 'hidden',
+        //titleBarStyle: 'hidden',
         width: 1650,
         height: 1100,
         title: 'Ground Curve',

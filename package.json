@@ -1,0 +1,27 @@
+{
+  "name": "groundcurve",
+  "version": "2.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/star.icns --prune=true --out=release-builds",
+    "package-win": "electron-packager . GroundCurve --overwrite --asar=true --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\"",
+    "package-linux": "electron-packager . GroundCurve --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/icon.png --prune=true --out=release-builds"
+  },
+  "author": "Onur Koc",
+  "license": "MIT",
+  "dependencies": {
+    "@turf/helpers": "^6.5.0",
+    "@turf/line-intersect": "^6.5.0",
+    "electron": "^16.0.1",
+    "jshint": "^2.13.1",
+    "math": "0.0.3",
+    "plotly.js-dist": "^2.6.3",
+    "regression": "^2.0.1"
+  },
+  "devDependencies": {
+    "electron-packager": "^15.4.0",
+    "eslint": "^8.3.0"
+  }
+}

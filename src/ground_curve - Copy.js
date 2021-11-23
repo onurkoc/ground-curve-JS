@@ -1,11 +1,11 @@
-/*jshint esversion: 7 */
-
-const plotly = require('plotly.js-dist');  // plotting
+/* eslint-disable no-undef */
 const math = require('math');  // math.js
+const plotly = require('plotly.js-dist');  // plotting
 const regression = require('regression');
 const lineIntersect = require('@turf/line-intersect').default;
-const helpers =require('@turf/helpers');  //helpers module of geospatial engine "TURF" for linestrings function
+const helpers =require('@turf/helpers');
 
+/* eslint-disable no-undef */
 const gammaSlider = document.getElementById('gammaSlider');
 const heightSlider = document.getElementById('heightSlider');
 const nuSlider = document.getElementById('nuSlider');
@@ -65,7 +65,7 @@ function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
   phi.value, f_ck.value, E_c.value, nu_c.value, t_c.value,
   dis_sup.value, advance_rate.value];
 
-  var variablesTypeNumber = variables.map(Number);
+  variablesTypeNumber = variables.map(Number);
   [gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     dis_sup, advance_rate] = variablesTypeNumber;
 
@@ -321,10 +321,6 @@ function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         y: (p_cr > 0) ? [p_cr / 1000]:[],
         //y: [p_cr / 1000],
     },
-    plasticRadius: {
-        x: [0],
-        y: [r_pm]
-    },
   };
 
   const groundCurvePoints = [];
@@ -363,18 +359,15 @@ function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     );
   }
 
-  var groundCurveLine = helpers.lineString(groundCurvePointsTest);  // From TURF
-  var supportCurveLine = helpers.lineString(supportCurvePointsTest);  // From TURF
+  var groundCurveLine = helpers.lineString(groundCurvePointsTest);
+  var supportCurveLine = helpers.lineString(supportCurvePointsTest);
 
   var intersectTest = lineIntersect(
     groundCurveLine,
     supportCurveLine
     );
-  try {
-    console.log(intersectTest.features[0].geometry.coordinates);
-  } catch(error) {
-    console.log(error);
-  }
+
+  console.log(intersectTest.features[0].geometry.coordinates);
 
   //usage -> intersectTest.features[0].geometry.coordinates
   //returns -> an array with x and y coordinates
@@ -400,7 +393,7 @@ function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
       (k - 1) * math.max(...p_point) + sigma_cm)) ** (1 / (k - 1));
     
     // define zip function which zips two arrays as pairs
-    var zip = (...rows) => [...rows[0]].map((_, c) => rows.map(row => row[c]));
+    zip = (...rows) => [...rows[0]].map((_, c) => rows.map(row => row[c]));
     var zippedArray = zip(p_scl, p_point);
 
     zippedArray.forEach(item => {
@@ -478,7 +471,7 @@ function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
       redIntersect: { x: p_x_l, y: p_y_l }
     };
     // Add this value to data_object
-    const arrROF = rateOfFlow(LDP.redIntersect, advance_rate);
+    const arrROF = rateOfFlow(LDP.redIntersect, advance_rate, sigma);
     data_object['LDP'] = LDP
     data_object['actualStress'] = {
       x: arrROF[1].map(item => item / 24),  // time in days
@@ -544,7 +537,7 @@ function isSegmentIntersected(points) {
   return isPointBetween(i1, P1, P2) && isPointBetween(i1, P3, P4);
 }
 
-function rateOfFlow(dispObj, rate) {
+function rateOfFlow(dispObj, rate, stress) {
   // dispObj: x, y object of intersection points
   // rate: advance rate
   const wall_disp = dispObj.x, dist_to_face = dispObj.y;
@@ -559,6 +552,9 @@ function rateOfFlow(dispObj, rate) {
   arr_disp.slice(1).forEach((item, index) => {
     del_eps.push(item - arr_disp.slice(0, -1)[index]);
   });
+
+  // stress in lining in time [hours]
+  const sigma = stress;
 
   // Constants for rate of flow calculation
   const E_28 = 15000;  // [MPa]
@@ -583,8 +579,9 @@ function rateOfFlow(dispObj, rate) {
   // strains due to shrinkage
   const eps_sh = arr_days.map(
     item => eps_sh_inf * item / (item + B));
-  const sigma_2 = [0];
-  const eps_d = [0];
+
+  const eps_d = [];
+  const sigmaROF = [];  // Sigma calculated in flow rate function
   for (let index = 0; index < arr_days.length; index++) {
     if (index === arr_days.length - 1) {
       break;
@@ -592,22 +589,25 @@ function rateOfFlow(dispObj, rate) {
     if (index === 0) {
       // start with zero values
       eps_d.push(0);
-      sigma_2.push(0);
+      sigmaROF.push(0);
     } else {
       const del_eps_sh = eps_sh[index] - eps_sh[index - 1];
-      const del_eps_t = eps_t[index] - eps_t[index - 1];
+      // const del_eps_t = eps_t[index] - eps_t[index - 1];
       const del_C_t = C_t[index] - C_t[index - 1];
-      const value_eps_d = (sigma_2[index - 1] * C_d_inf -
+      const value_eps_d = (sigma[index] * C_d_inf -
         eps_d[index - 1]) * (1 - math.exp(-del_C_t / Q));
       eps_d.push(value_eps_d);
-      const value_sigma_2 = ((del_eps[index] - del_eps_sh - del_eps_t +
-        eps_d[index - 1] * (1 - math.exp(-del_C_t / Q)) +
-        sigma_2[index - 1] / E_t[index]) / (C_d_inf *
-          (1 - math.exp(-del_C_t / Q)) + del_C_t + (1 / E_t[index])));
-      sigma_2.push(value_sigma_2)
+      const epsilon_total = eps_d[index - 1] + del_eps[index - 1] +
+        sigma[index - 1] * del_C_t + value_eps_d + del_eps_sh;
+      const value_sigma_2 = epsilon_total * E_t[index];
+      //const value_sigma_2 = ((del_eps[index] - del_eps_sh - del_eps_t +
+      //  eps_d[index - 1] * (1 - math.exp(-del_C_t / Q)) +
+      //  sigma_2[index - 1] / E_t[index]) / (C_d_inf *
+      //    (1 - math.exp(-del_C_t / Q)) + del_C_t + (1 / E_t[index])));
+      sigmaROF.push(value_sigma_2)
     }
   }
-  return [sigma_2, arr_hours];
+  return [sigmaROF, arr_hours];
 }
 
 function updateGraphic(gammaValue, heightValue, nuValue, elasticityValue,
@@ -693,20 +693,7 @@ function updateGraphic(gammaValue, heightValue, nuValue, elasticityValue,
     yaxis: 'y1',
   };
 
-  const trace3_2 = {
-    x: obj.plasticRadius.x,
-    y: obj.plasticRadius.y,
-    mode: 'markers',
-    type: 'scatter',
-    visible: true,
-    showlegend: true,
-    hoverinfo: 'none',
-    opacity: 0,
-    name: `R_pm: ${obj.plasticRadius.y[0].toFixed(2)}`,
-  };
-
   const data = [trace1, trace1_1, trace2, trace3, trace3_1];
-  const dataBasic = [trace1, trace1_1, trace2, trace3, trace3_1, trace3_2];
 
   if (Object.keys(obj).includes('LDP')) {
     obj.LDP.grayDashed.x.forEach((item, index) => {
@@ -939,7 +926,6 @@ function updateGraphic(gammaValue, heightValue, nuValue, elasticityValue,
       },
       range: [0, math.max(obj.groundCurve.y)],
       domain: [0.55, 1],
-      rangemode: 'nonnegative',
     },
     yaxis2: {
       title: 'Distance from Tunnel Face [m]',
@@ -954,7 +940,6 @@ function updateGraphic(gammaValue, heightValue, nuValue, elasticityValue,
       range: [0, math.max(obj.groundCurve.y)],
       domain: [0.55, 1],
       anchor: 'x2',
-      rangemode: 'nonnegative',
     },
     yaxis4: {
       title: 'Stress SpC [MPa]',
@@ -977,56 +962,7 @@ function updateGraphic(gammaValue, heightValue, nuValue, elasticityValue,
     shapes: verticalLines,
   };
 
-  const layoutBasic = {
-    title: "Ground Reaction Curve",
-    plot_bgcolor: '#f9f7f7',
-    showlegend: true,
-    titlefont: {
-      size: 20
-    },
-    margin: {
-      l: 50,
-      r: 50,
-      b: 50,
-      t: 50,
-      pad: 4,
-    },
-    height: 800,
-    width: 1300,
-    hovermode: 'closest',
-    autosize: true,
-    xaxis: {
-      rangemode: 'normal',
-      title: 'Tunnel Wall Displacement [m]',
-      range: [0, math.max(obj.groundCurve.x)],
-      tickformat: '.3f',
-      rangemode: 'nonnegative',
-    },
-    yaxis: {
-      scaleratio: 0.1,
-      tickformat: '.2f',
-      title: 'Support Pressure [MPa]',
-      titlefont: {
-        size: 12,
-      },
-      range: [0, math.max(obj.groundCurve.y)],
-      rangemode: 'nonnegative',
-    },
-    legend: {
-      traceorder: 'normal',
-      font: {
-        family: 'arial',
-        size: 12,
-        color: '#000',
-      },
-      bgcolor: '#E2E2E2',
-      bordercolor: '#FFFFFF',
-      borderwidth: 1.5,
-    },
-  };
-
   plotly.newPlot('graph', data, layout);
-  plotly.newPlot('graphBasic', dataBasic, layoutBasic);
 }
 
 function updateSlider() {
@@ -1129,27 +1065,3 @@ concNuInput.onchange = updateSlider;
 concThicknessInput.onchange = updateSlider;
 distSupportInput.onchange = updateSlider;
 advanceRateInput.onchange = updateSlider;
-
-function openCity(evt, cityName) {
-  // source: https://www.w3schools.com/howto/howto_js_tabs.asp
-  // JS to control the tabs in the index.html
-  var i, tabcontent, tablinks;
-
-  // Get all elements with class="tabcontent" and hide them
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-
-  // Get all elements with class="tablinks" and remove the class "active"
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-
-  // Show the current tab, and add an "active" class to the button that opened the tab
-  document.getElementById(cityName).style.display = "block";
-  evt.currentTarget.className += " active";
-}
-
-document.getElementById("defaultOpen").click();
