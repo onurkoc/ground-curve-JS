@@ -2,6 +2,10 @@
 
 A desktop application for analytical pre-design of tunnel support using the **Convergence-Confinement Method (CCM)**. This is the JavaScript/Electron reimplementation of the original Python version.
 
+## ⬇️ Download
+
+**[GroundCurve-win32-x64.zip](https://github.com/onurkoc/ground-curve-JS/releases/download/v1.8.1/GroundCurve-win32-x64.zip)** — Windows x64, no installation required. Extract and run `GroundCurve.exe`.
+
 ---
 
 ## Screenshots
