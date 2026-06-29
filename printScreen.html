@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Parameters</title>
+</head>
+<body>
+    <label>Parameters:</label>
+        <br>
+    <div id="content">
+        <label class="sliderText">γ:</label>
+        <label class="sliderText" id="gammaValue"></label>
+        <label class="sliderText">[kN/m³]</label>
+        <br>
+        <label class="sliderText">H:</label>
+        <label class="sliderText" id="heightValue"></label>
+        <label class="sliderText">[m]</label>
+        <br>
+        <label class="sliderText">ν:</label>
+        <label class="sliderText" id="nuValue"></label>
+        <label class="sliderText">[-]</label>
+        <br>
+        <label class="sliderText">E:</label>
+        <label class="sliderText" id="elasticityValue"></label>
+        <label class="sliderText">[kN/m²]</label>
+        <br>
+        <label class="sliderText">c:</label>
+        <label class="sliderText" id="cohesionValue"></label>
+        <label class="sliderText">[kN/m²]</label>
+        <br>
+        <label class="sliderText">φ:</label>
+        <label class="sliderText" id="frictionValue"></label>
+        <label class="sliderText">[°]</label>
+        <br>
+        <label class="sliderText">Tunnel Diameter:</label>
+        <label class="sliderText" id="diameterValue"></label>
+        <label class="sliderText">[m]</label>
+        <br>
+        <label class="sliderText">SpC Strength:</label>
+        <label class="sliderText" id="concStrengthValue"></label>
+        <label class="sliderText">[MPa]</label>
+        <br>
+        <label class="sliderText">SpC Elasticity:</label>
+        <label class="sliderText" id="concElasticityValue"></label>
+        <label class="sliderText">[MPa]</label>
+        <br>
+        <label class="sliderText">SpC Thickness:</label>
+        <label class="sliderText" id="concThicknessValue"></label>
+        <label class="sliderText">[m]</label>
+        <br>
+        <label class="sliderText">SpC Distance:</label>
+        <label class="sliderText" id="distSupportValue"></label>
+        <label class="sliderText">[m]</label>
+        <br>
+        <label class="sliderText">Advance Rate:</label>
+        <label class="sliderText" id="advanceRateValue"></label>
+        <label class="sliderText">[m/day]</label>
+        <br>
+        <label class="lscText">LSC Yield:</label>
+        <label class="lscText" id="lscYieldValue"></label>
+        <label class="lscText">[cm]</label>
+        <br>
+        <label class="BoltText">Bolt Pull-out Force:</label>
+        <label class="BoltText" id="pullOutForceValue"></label>
+        <label class="BoltText">[kN]</label>
+        <br>
+        <label class="BoltText">Bolt Long. Length:</label>
+        <label class="BoltText" id="boltLongitudinalLengthValue"></label>
+        <label class="BoltText">[cm]</label>
+        <br>
+        <label class="BoltText">Bolt Rad. Length:</label>
+        <label class="BoltText" id="boltRadialLengthValue"></label>
+        <label class="BoltText">[cm]</label>
+        <br>
+        <label class="BoltText">Bolt Diameter:</label>
+        <label class="BoltText" id="boltDiamaterValue"></label>
+        <label class="BoltText">[mm]</label>
+        <br>
+        <label class="BoltText">Bolt Length:</label>
+        <label class="BoltText" id="boltLengthValue"></label>
+        <label class="BoltText">[m]</label>
+        <br>
+    </div>
+    
+    <script>
+        window.electronAPI.onSliderValues(function(item){
+            const gamma = document.createTextNode(item.gamma);
+            const gammaL = document.getElementById('gammaValue');
+            gammaL.appendChild(gamma);
+
+            const height = document.createTextNode(item.height);
+            const heightL = document.getElementById('heightValue');
+            heightL.appendChild(height);
+
+            const nu = document.createTextNode(item.nu);
+            const nuL = document.getElementById('nuValue');
+            nuL.appendChild(nu);
+
+            const elasticity = document.createTextNode(item.elasticity);
+            const elasticityL = document.getElementById('elasticityValue');
+            elasticityL.appendChild(elasticity);
+
+            const cohesion = document.createTextNode(item.cohesion);
+            const cohesionL = document.getElementById('cohesionValue');
+            cohesionL.appendChild(cohesion);
+
+            const friction = document.createTextNode(item.friction);
+            const frictionL = document.getElementById('frictionValue');
+            frictionL.appendChild(friction);
+
+            const diameter = document.createTextNode(item.diameter);
+            const diameterL = document.getElementById('diameterValue');
+            diameterL.appendChild(diameter);
+
+            const concStrength = document.createTextNode(item.concStrength);
+            const concStrengthL = document.getElementById('concStrengthValue');
+            concStrengthL.appendChild(concStrength);
+
+            const concElasticity = document.createTextNode(item.concElasticity);
+            const concElasticityL = document.getElementById('concElasticityValue');
+            concElasticityL.appendChild(concElasticity);
+
+            const concThickness = document.createTextNode(item.concThickness);
+            const concThicknessL = document.getElementById('concThicknessValue');
+            concThicknessL.appendChild(concThickness);
+
+            const distSupport = document.createTextNode(item.distSupport);
+            const distSupportL = document.getElementById('distSupportValue');
+            distSupportL.appendChild(distSupport);
+
+            const advanceRate = document.createTextNode(item.advanceRate);
+            const advanceRateL = document.getElementById('advanceRateValue');
+            advanceRateL.appendChild(advanceRate);
+
+            // if the value of the lsc yield is zero do not print it
+            if (Number(item.lscYield) !== 0.0) {
+                const lscYield = document.createTextNode(item.lscYield);
+                const lscYieldL = document.getElementById('lscYieldValue');
+                lscYieldL.appendChild(lscYield);
+            } else {
+                const lscElements = document.querySelectorAll('.lscText');
+
+                for (let index = 0; index < lscElements.length; index++) {
+                    var lscTextItem = lscElements[index];
+                    lscTextItem.innerHTML = '';
+                }
+            }
+
+            // if this value is zero then don't write the rest
+            if (Number(item.pullOutForce) !== 0.0) {
+                const pullOutForce = document.createTextNode(item.pullOutForce);
+                const pullOutForceL = document.getElementById('pullOutForceValue');
+                pullOutForceL.appendChild(pullOutForce);
+
+                const boltLongitudinalLength = document.createTextNode(item.boltLongitudinalLength*100);
+                const boltLongitudinalLengthL = document.getElementById('boltLongitudinalLengthValue');
+                boltLongitudinalLengthL.appendChild(boltLongitudinalLength);
+
+                const boltRadialLength = document.createTextNode(item.boltRadialLength*100);
+                const boltRadialLengthL = document.getElementById('boltRadialLengthValue');
+                boltRadialLengthL.appendChild(boltRadialLength);
+
+                const boltDiamater = document.createTextNode(item.boltDiamater*1000);
+                const boltDiamaterL = document.getElementById('boltDiamaterValue');
+                boltDiamaterL.appendChild(boltDiamater);
+
+                const boltLength = document.createTextNode(item.boltLength);
+                const boltLengthL = document.getElementById('boltLengthValue');
+                boltLengthL.appendChild(boltLength);
+            } else {
+
+                const boltElements = document.getElementsByClassName('BoltText');
+
+                for (let index = 0; index < boltElements.length; index++) {
+                    var element = boltElements.item(index);
+                    element.innerHTML = '';
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

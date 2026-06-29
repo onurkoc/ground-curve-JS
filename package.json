@@ -1,27 +1,33 @@
 {
   "name": "groundcurve",
-  "version": "2.0.0",
-  "description": "",
-  "main": "main.js",
+  "version": "1.8",
+  "description": "Tunnel ground reaction curve analysis — Convergence-Confinement Method",
+  "main": "out/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/star.icns --prune=true --out=release-builds",
-    "package-win": "electron-packager . GroundCurve --overwrite --asar=true --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\"",
-    "package-linux": "electron-packager . GroundCurve --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/png/icon.png --prune=true --out=release-builds"
+    "start": "electron-vite dev",
+    "build": "electron-vite build",
+    "package-win": "npm run build && electron-packager . GroundCurve --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --ignore=\"^/src|^/electron|^/\\.vite|^/index\\.html|^/release-builds\" --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\""
   },
   "author": "Onur Koc",
   "license": "MIT",
   "dependencies": {
-    "@turf/helpers": "^6.5.0",
-    "@turf/line-intersect": "^6.5.0",
-    "electron": "^16.0.1",
-    "jshint": "^2.13.1",
-    "math": "0.0.3",
-    "plotly.js-dist": "^2.6.3",
-    "regression": "^2.0.1"
+    "@fontsource/geist": "^5.2.9",
+    "@primevue/themes": "^4.2.5",
+    "@turf/helpers": "^7.3.5",
+    "@turf/line-intersect": "^7.3.5",
+    "jshint": "^2.13.6",
+    "plotly.js-cartesian-dist": "^3.6.0",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.2.5",
+    "regression": "^2.0.1",
+    "vue": "^3.5.39"
   },
   "devDependencies": {
-    "electron-packager": "^15.4.0",
-    "eslint": "^8.3.0"
+    "@electron/packager": "^20.0.1",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "electron": "^42.0.0",
+    "electron-vite": "^2.3.0",
+    "eslint": "^8.3.0",
+    "vite": "^5.4.11"
   }
 }

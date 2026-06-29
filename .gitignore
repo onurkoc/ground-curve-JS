@@ -1,1 +1,6 @@
-node_modules
+node_modules/
+out/
+release-builds/
+Support Docs/
+.vite/
+*.orig

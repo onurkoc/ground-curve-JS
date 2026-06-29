@@ -1,3 +1,4 @@
+/*jshint esversion: 7 */
 // parameters for strength development of shotcrete
 // see following for more information:
 // Authors: Anna-Lena Hammer et al.
@@ -5,6 +6,20 @@
 //    development of shotcrete
 // Journal: Geomechanics and Tunnelling, Volume 12, issue 6 p. 720-738
 // Link: https://doi.org/10.1002/geot.201900054
+
+
+// arange function as in numpy
+function arange(start, end, step) {
+    const arr = [];
+    let count = start;
+    const numberOfSteps = (end - start) / step;
+    for (let index = start; index < numberOfSteps; index++) {
+      arr.push(count);
+      count += step;
+    }
+    return arr;
+  }
+
 var quantiles = {
     perc_5 : {
         a : -2.685,
@@ -62,7 +77,7 @@ var quantiles = {
         f : 0.381,
         g : 0.273,
     },
-}
+};
 
 // Strength development of shotcrete in time acc. Anne-Lena Hammer et al.
 function strengthTime(quantile, f_c) {
@@ -75,9 +90,10 @@ function strengthTime(quantile, f_c) {
     const g = quantile.g;
     const timeHours = arange(0, 24 * 28, 1); // hours
     for (let index = 0; index < timeHours.length; index++) {
+        let n_c;
         if (timeHours[index] <= 48) {
-        var n_c = 10 ** (a + b / 
-            (1 + math.exp((-c + math.log10(timeHours[index]) / d))));
+        n_c = 10 ** (a + b / 
+            (1 + Math.exp((-c + Math.log10(timeHours[index]) / d))));
         } else {
         n_c = f * (timeHours[index])**g;
         }
@@ -85,7 +101,7 @@ function strengthTime(quantile, f_c) {
         strength.push(n_c * f_c);
         }
     }
-    return strength
+    return strength;
 }
 
 var strength_ = strengthTime(quantiles.median, f_ck);

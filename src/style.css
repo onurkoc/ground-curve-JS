@@ -1,0 +1,322 @@
+@import '@fontsource/geist/400.css';
+@import '@fontsource/geist/500.css';
+@import '@fontsource/geist/600.css';
+@import '@fontsource/geist/700.css';
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --sidebar-w: 172px;
+    --tabbar-h: 44px;
+    --chart-pad: 10px;
+    --color-bg:        #fafafa;
+    --color-sidebar:   #ffffff;
+    --color-border:    #e4e4e7;
+    --color-title-bg:  #18181b;
+    --color-title-fg:  #fafafa;
+    --color-text:      #18181b;
+    --color-muted:     #71717a;
+    --color-accent:    #3f3f46;
+    --color-hover:     #f4f4f5;
+    --color-input-bg:  #fafafa;
+    --color-active:    #18181b;
+    --color-slider:    #52525b;
+}
+
+html, body, #app {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Geist', 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.app-layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+    background: var(--color-sidebar);
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.app-title {
+    padding: 11px 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-title-fg);
+    background: var(--color-title-bg);
+    flex-shrink: 0;
+}
+
+/* ── Chart area ──────────────────────────────────────────────────────────── */
+.chart-area {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-bg);
+}
+
+.chart-tabs {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure PrimeVue Tabs stretches full height */
+.chart-tabs > .p-tabs {
+    flex: 1;
+    min-height: 0;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.chart-tabs .p-tabpanels {
+    flex: 1 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: var(--color-bg) !important;
+    overflow: hidden !important;
+}
+
+.chart-tabs .p-tabpanel {
+    height: 100% !important;
+    padding: 0 !important;
+}
+
+/* Chart containers: fill tab panel with a small inset */
+.chart-tab-content {
+    width: 100%;
+    height: calc(100vh - var(--tabbar-h));
+    padding: var(--chart-pad);
+    overflow: hidden;
+    display: flex;
+}
+
+.chart-tab-content > div {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Parameter rows ──────────────────────────────────────────────────────── */
+.param-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 40px;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px 0;
+}
+
+.param-label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    white-space: nowrap;
+}
+
+.param-unit {
+    font-size: 0.72rem;
+    color: var(--color-muted);
+    text-align: right;
+    white-space: nowrap;
+    opacity: 0.7;
+}
+
+.param-slider-row {
+    padding: 4px 8px 6px;
+}
+
+/* ── Print panel ─────────────────────────────────────────────────────────── */
+.print-panel {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    background: var(--color-bg);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.print-param-list {
+    display: table;
+    border-spacing: 0 3px;
+    font-size: 0.88rem;
+    color: var(--color-text);
+}
+
+.print-param-row {
+    display: table-row;
+}
+
+.print-param-label {
+    display: table-cell;
+    padding-right: 12px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    min-width: 200px;
+}
+
+.print-param-value {
+    display: table-cell;
+    padding-right: 6px;
+    color: var(--color-text);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.print-param-unit {
+    display: table-cell;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* PrimeVue component overrides (neutral / shadcn-style)                       */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+/* Accordion */
+.p-accordionheader {
+    background: var(--color-hover) !important;
+    color: var(--color-text) !important;
+    font-family: 'Geist', system-ui, sans-serif !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 9px 14px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.p-accordionheader:hover {
+    background: #ececed !important;
+}
+
+.p-accordioncontent-content {
+    background: var(--color-sidebar) !important;
+    padding: 4px 0 4px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* Tabs */
+.p-tablist {
+    background: var(--color-sidebar) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    padding: 0 4px !important;
+    height: var(--tabbar-h) !important;
+    gap: 0 !important;
+}
+
+.p-tab {
+    font-family: 'Geist', system-ui, sans-serif !important;
+    color: var(--color-muted) !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    padding: 0 16px !important;
+    height: 100% !important;
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+}
+
+.p-tab[data-p-active="true"],
+.p-tab.p-tab-active {
+    color: var(--color-active) !important;
+    font-weight: 600 !important;
+    border-bottom-color: var(--color-active) !important;
+}
+
+/* InputNumber */
+.p-inputnumber {
+    width: 100% !important;
+}
+
+.p-inputnumber-input {
+    font-family: 'Geist', system-ui, sans-serif !important;
+    font-size: 0.84rem !important;
+    padding: 3px 7px !important;
+    height: 26px !important;
+    background: var(--color-input-bg) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 4px !important;
+    color: var(--color-text) !important;
+    width: 100% !important;
+}
+
+.p-inputnumber-input:focus {
+    border-color: var(--color-accent) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(63,63,70,0.12) !important;
+}
+
+/* Slider — native range, shadcn/ui style */
+.gc-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 9999px;
+    background: linear-gradient(
+        to right,
+        #18181b var(--fill, 0%),
+        #e4e4e7 var(--fill, 0%)
+    );
+    cursor: pointer;
+    outline: none;
+    border: none;
+    display: block;
+    padding: 0;
+    margin: 0;
+}
+
+.gc-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1.5px solid #a1a1aa;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+    cursor: pointer;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.gc-slider::-webkit-slider-thumb:hover {
+    border-color: #18181b;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.16);
+}
+
+.gc-slider:focus::-webkit-slider-thumb {
+    border-color: #18181b;
+    box-shadow: 0 0 0 3px rgba(24,24,27,0.14);
+}
+
+/* Button */
+.p-button {
+    font-family: 'Geist', system-ui, sans-serif !important;
+    font-size: 0.83rem !important;
+    background: var(--color-active) !important;
+    border-color: var(--color-active) !important;
+    border-radius: 6px !important;
+}
+
+.p-button:hover {
+    background: #3f3f46 !important;
+}
