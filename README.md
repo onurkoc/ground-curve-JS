@@ -7,12 +7,13 @@ A desktop application for analytical pre-design of tunnel support using the **Co
 ## Screenshots
 
 ### Basic Tab — Ground Reaction Curve
-![Basic GRC](docs/screenshots/basic.png)
+![Basic GRC](docs/screenshots/App_basic.png)
 
 ### Enhanced Tab — Full CCM Dashboard
-![Enhanced CCM](docs/screenshots/enhanced.png)
+![Enhanced CCM](docs/screenshots/App_enhanced.png)
 
-*(Add screenshots to `docs/screenshots/` after running the app)*
+### Enhanced Tab — With LSC Yield Element
+![Enhanced with LSC](docs/screenshots/App_enhanced_yield.png)
 
 ---
 
