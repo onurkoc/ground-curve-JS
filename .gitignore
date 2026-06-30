@@ -4,3 +4,4 @@ release-builds/
 Support Docs/
 .vite/
 *.orig
+.claude/
