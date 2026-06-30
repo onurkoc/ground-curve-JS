@@ -1,3 +1,38 @@
+What's new in Version 1.8.1:
+
+- Parameters
+    - Shotcrete strength f_ck slider max raised 40 -> 60 MPa
+    - Soil modulus E now entered in MPa instead of kPa (slider 10-16000 MPa,
+      converted internally to kPa for the GRC formulas)
+    - New default starting parameters (γ=20, H=500, ν=0.3, E=1050 MPa, c=1000,
+      φ=28, D=8, f_ck=30, E_c=31000, ν_c=0.2, t_c=0.2, d_face=2, adv.=2,
+      LSC=0, T_bf=250, S_l=2, S_r=1.5, d_b=0.034, L_b=3)
+
+- Physics fixes (rate-of-flow / shotcrete creep-relaxation, groundCurveCalc.js)
+    - Verified GRC, LDP, shotcrete/bolt support formulas against Hoek
+      "Rock-Support Interaction" paper (eq. 5-19) — all confirmed correct
+    - Verified rate-of-flow model against Entfellner Diss Chp.6 (eq. 6.8-6.17)
+      and MSc thesis 2017 (Eq. 4-12) — found and fixed 4 bugs:
+        - eps_d (visco-elastic strain) was missing its carry-forward term,
+          never asymptoting toward Cd_inf
+        - sigma_2 numerator referenced the previous-step eps_d instead of the
+          just-computed current-step value
+        - C(t) (viscous strain) used wrong exponent (1/3 instead of 0.25) and
+          wrong time base (days instead of hours)
+        - E(t) (shotcrete time-dependent stiffness) was a hardcoded, unrelated
+          formula (E_28=31700 fixed, ignoring the E_c parameter); replaced with
+          Aldrian's original Gl. V-41: E_SpC(t) = E_c * sqrt(t/(4.2+0.85t)),
+          matching the existing Aldrian strength curve (Gl. V-42) already used
+          for the shotcrete capacity/target curve
+
+- Repo cleanup
+    - Removed dead/unreferenced files: ground_curve.js (+ "- Copy.js", the
+      pre-refactor physics file superseded by physics/groundCurveCalc.js),
+      root main.js (pre-electron-vite entry point, superseded by
+      electron/main.js), src/renderer.js, src/customPrint.css, stray
+      ICON_figma.ico/png exports, stray screenshot file
+    - Added .jshintrc and .vscode/settings.json to version control
+
 What's new in Version 1.8:
 
 - Build tooling
