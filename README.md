@@ -27,7 +27,7 @@ A desktop application for analytical pre-design of tunnel support using the **Co
 - **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2005)
 - **Support Characteristic Curve (SCC)** — Thick-walled cylinder shotcrete + rock bolt stiffness
 - **LSC (Lining Stress Controller) support** — Yield gap modelled correctly: zero shotcrete stress until gap is exhausted
-- **Rate-of-Flow stress model** — Time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Entfellner 2020)
+- **Rate-of-Flow stress model** — Time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (P. Schubert 1988)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
 - **Safety factor FS** — at GRC ∩ SCC equilibrium
 - **Print tab** — parameter summary window
