@@ -89,7 +89,7 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 
 ## Credits
 
-Special thanks to:
+Used works & special thanks to:
 
 - **Gunter Geschwandtner** — Msc. thesis
 - **Manuel Entfellner** — Msc. & PhD. thesis
