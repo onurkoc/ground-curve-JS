@@ -29,7 +29,6 @@ A desktop application for analytical pre-design of tunnel support using the **Co
 - **LSC (Lining Stress Controller) support** — Yield gap modelled correctly: zero shotcrete stress until gap is exhausted
 - **Rate-of-Flow stress model** — Time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Entfellner 2020)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
-- **Lining forces N & M** — Möller & Vermeer (2005), scaled by displacement ratio
 - **Safety factor FS** — at GRC ∩ SCC equilibrium
 - **Print tab** — parameter summary window
 
