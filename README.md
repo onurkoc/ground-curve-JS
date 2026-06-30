@@ -91,8 +91,9 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 
 Special thanks to:
 
-- **Nedim Radoncic** — for collaboration and scientific input on the shotcrete mechanics implementation
-- **Manuel Entfellner** — for the Rate-of-Flow methodology, LSC modelling, and shotcrete utilisation framework documented in his doctoral thesis *(TU Graz, 2020)*
+- **Gunter Geschwandtner** — Msc. thesis
+- **Manuel Entfellner** — Msc. & PHd. thesis
+- **Nedim Radoncic** — PHd. thesis
 
 ---
 
