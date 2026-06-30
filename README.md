@@ -82,7 +82,7 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 | LDP | Vlachopoulos, N. & Diederichs, M.S. (2005). *Rock Mechanics and Rock Engineering* |
 | Lining forces | Möller, S.C. & Vermeer, P.A. (2005). Proc. *5th Int. Symp. on Sprayed Concrete* |
 | Shotcrete strength (time) | Aldrian, W. (1991). *Beitrag zum Materialverhalten von früh belastetem Spritzbeton* |
-| Rate-of-Flow / LSC / utilisation | Entfellner, M. (2020). *Doctoral thesis, TU Graz* |
+| Rate-of-Flow / LSC / utilisation | Schubert, P. (1988). *Beitrag zum rheologischen Verhalten vom Spritzbeton, Felsbau 6, Nr.3 pp. 150-153* |
 
 ---
 
