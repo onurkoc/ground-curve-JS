@@ -92,8 +92,8 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 Special thanks to:
 
 - **Gunter Geschwandtner** — Msc. thesis
-- **Manuel Entfellner** — Msc. & PHd. thesis
-- **Nedim Radoncic** — PHd. thesis
+- **Manuel Entfellner** — Msc. & PhD. thesis
+- **Nedim Radoncic** — PhD. thesis
 
 ---
 
