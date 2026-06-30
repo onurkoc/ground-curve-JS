@@ -1,0 +1,52 @@
+What's new in Version 1.8:
+
+- Build tooling
+    - Migrated from plain `electron .` to electron-vite (dev server with HMR, production build)
+    - New build config: electron.vite.config.mjs
+    - Main process moved to electron/main.js
+    - Preload script added: electron/preload.js (exposes window.electronAPI for IPC)
+    - electron-packager (deprecated) replaced with @electron/packager (no API change)
+
+- UI framework
+    - Replaced vanilla JS UI with Vue 3 + PrimeVue 4.2.5
+    - All 19 parameters now use Vue reactive refs (v-model) — replaced ~100 lines of manual slider/input sync code
+    - PrimeVue Accordion for collapsible sidebar sections (all start collapsed)
+    - PrimeVue Tabs for Basic / Enhanced / Print views
+    - PrimeVue InputNumber for parameter inputs
+    - Native <input type="range"> with CSS for sliders (shadcn/ui style: filled dark track, white thumb)
+    - Geist font (@fontsource/geist) applied throughout
+
+- Styling
+    - Light theme: slate/zinc neutral palette, no blue UI chrome
+    - Sidebar reduced to 172px
+    - Chart containers use responsive: true + Plotly.Plots.resize() on tab switch
+
+- Dependencies updated
+    - math pkg (dead, 2012) removed; replaced with native Math.*
+      - Fixed 5 silent bugs: Math.max(array) without spread was returning NaN for chart ranges
+    - @electron/remote 2.0.8 → 2.1.3
+      - Fixed: initialize() moved inside app.once('ready') to prevent ipcMain undefined crash
+    - jshint 2.13.4 → 2.13.6
+    - @turf/helpers 6.5.0 → 7.3.5 (import syntax: require(...).default → named destructure)
+    - @turf/line-intersect 6.5.0 → 7.3.5 (same)
+    - plotly.js-dist 2.11.1 → 3.6.0
+      - Fixed: layout title format updated to {text, font} object (v3 dropped string format)
+      - Added responsive: true to both chart configs
+    - vue 3.5.39 added
+    - primevue 4.2.5 added
+    - @primevue/themes 4.2.5 added
+    - @fontsource/geist 5.2.9 added
+    - primeicons 7.0.0 added
+    - electron-vite 2.3.0 added (dev)
+    - vite 5.4.21 added (dev)
+    - @vitejs/plugin-vue 5.2.4 added (dev)
+
+- Physics / calculation (groundCurveCalc.js, refactored from ground_curve.js)
+    - groundCurve() now accepts plain numbers instead of DOM elements
+    - n_m_acc_to_Vermeer.js converted from CommonJS (module.exports) to ES module (export default)
+    - Dynamic require() inside function replaced with static import
+
+- Print screen
+    - Parameter labels updated to full names matching the print window (no abbreviations)
+    - Print panel in-app view: neutral colors, table-aligned layout
+

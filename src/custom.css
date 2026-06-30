@@ -4,7 +4,36 @@
   padding-right: 0px;
   margin-top: 3px;
   margin-right: 0px;
+  margin-bottom: 10px;
   float: left;
+  cursor: pointer;
+  background: none;
+}
+
+.inputText:hover, .soilText:hover, .tunnelText:hover, .shotcreteText:hover, .boltText:hover {
+  background-color: rgb(235, 226, 226);
+  font-style: italic;
+  font-weight: bold;
+}
+
+.input-container {
+  display: none;
+}
+
+.soilText-container {
+  display: none;
+}
+
+.tunnelText-container {
+  display: none;
+}
+
+.shotcreteText-container {
+  display: none;
+}
+
+.boltText-container {
+  display: none;
 }
 
 .slider {
@@ -20,6 +49,17 @@
   float: left;
   /* border: 1px solid black; */
 }
+
+#underline {
+  margin: 5px 0px 0px 0px;
+  padding-right: 0px;
+  font-size: 12px;
+  font-family: 'Open Sans', sans-serif;
+  border-bottom: thin solid lightgrey;
+  float: left;
+  /* border: 1px solid black; */
+}
+
 .sliderForm {
   width: 90%;
   background: none;
@@ -29,6 +69,20 @@
   margin-top: 5px;
   float: left;
   height: 50%;
+  display: block;
+  /* border: 1px solid black; */
+}
+
+.inputForm {
+  width: 90%;
+  background: none !important;
+  top: 0;
+  left: 0;
+  padding: 0px 0px;
+  margin-top: 5px;
+  float: left;
+  height: 50%;
+  display: block;
   /* border: 1px solid black; */
 }
 
@@ -46,37 +100,37 @@
   float: left;
 }
 
-#elasticityInput {
+#elasticityInput, #elasticityInputDummy {
   margin-left: 5px;
   width: 55% !important;
 }
 
-#cohesionInput {
+#cohesionInput, #cohesionInputDummy {
   width: 40% !important;
   margin-left: 4px;
 }
 
-#concStrengthInput {
+#concStrengthInput, #concStrengthInputDummy {
   width: 30% !important;
   margin-left: 4px;
 }
 
-#distSupportInput {
+#distSupportInput, #distSupportInputDummy {
   width: 25% !important;
   margin-left: 4px;
 }
 
-#advanceRateInput {
+#advanceRateInput, #advanceRateInputDummy {
   width: 30% !important;
   margin-left: 4px;
 }
 
-#concThicknessInput {
+#concThicknessInput, #concThicknessInputDummy {
   width: 30% !important;
   margin-left: 4px;
 }
 
-#concNuInput {
+#concNuInput, #concNuInputDummy {
   width: 30% !important;
   margin-left: 4px;
 }
@@ -102,7 +156,7 @@
   /* border: 1px solid black; */
 }
 
-.soilText {
+.inputText, .soilText {
   margin: 0px 0px 0px 0px;
   font-size: 1.6rem;
   border-bottom: thin solid lightgrey;
@@ -110,7 +164,7 @@
   font-family: 'Open Sans', sans-serif;
 }
 
-.tunnelText{
+.tunnelText, .shotcreteText, .boltText{
   width: 90%;
   margin: 0px 0px 0px 0px;
   font-size: 1.6rem;
@@ -221,4 +275,14 @@ input[type=range]:focus::-ms-fill-lower {
 }
 input[type=range]:focus::-ms-fill-upper {
   background: #367ebd;
+}
+
+.show {
+  display:block;
+}
+
+.show-Text {
+  background-color: rgb(235, 226, 226);
+  font-style: italic;
+  font-weight: bold;
 }

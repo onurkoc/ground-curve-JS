@@ -65,23 +65,23 @@ const params = reactive({
   gamma: 20,
   H:     500,
   nu:    0.30,
-  E:     1050000,
+  E:     1050,
   c:     1000,
   phi:   28,
   // Tunnel
-  D:     5,
+  D:     8,
   // Shotcrete
-  f_ck:         20,
-  E_c:          5000,
+  f_ck:         30,
+  E_c:          31000,
   nu_c:         0.2,
   t_c:          0.2,
   dis_sup:      2,
-  advance_rate: 5,
+  advance_rate: 2,
   l_yield:      0,
   // Rock bolt
-  t_bf: 0,
-  s_l:  1,
-  s_r:  1,
+  t_bf: 250,
+  s_l:  2,
+  s_r:  1.5,
   d_b:  0.034,
   l_b:  3
 })
@@ -109,7 +109,7 @@ const paramLabels = {
   l_b:  'Bolt Length'
 }
 const paramUnits = {
-  gamma: 'kN/m³', H: 'm', nu: '—', E: 'kPa', c: 'kPa', phi: '°',
+  gamma: 'kN/m³', H: 'm', nu: '—', E: 'MPa', c: 'kPa', phi: '°',
   D: 'm',
   f_ck: 'MPa', E_c: 'MPa', nu_c: '—', t_c: 'm',
   dis_sup: 'm', advance_rate: 'm/day', l_yield: 'cm',

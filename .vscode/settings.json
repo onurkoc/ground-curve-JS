@@ -1,0 +1,7 @@
+{
+    "jshint.config": "",
+    "jshint.options": {
+        "esversion": 6
+    },
+    "eslint.alwaysShowStatus": true,
+}

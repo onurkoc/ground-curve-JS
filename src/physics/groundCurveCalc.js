@@ -56,7 +56,7 @@ function findSegmentIntersection(firstCurve, secondCurve) {
 
 // ─── Rate of flow (creep / shrinkage / thermal) ──────────────────────────────
 
-function rateOfFlow(dispObj, rate) {
+function rateOfFlow(dispObj, rate, E_c, t0Days = 0) {
     const wall_disp = dispObj.x, dist_to_face = dispObj.y
     const arr_disp = wall_disp.map(item => item - wall_disp[0])
     const arr_dist_to_scl = dist_to_face.map(item => item - dist_to_face[0])
@@ -65,14 +65,18 @@ function rateOfFlow(dispObj, rate) {
     const del_eps = []
     arr_disp.slice(1).forEach((item, index) => del_eps.push(item - arr_disp.slice(0, -1)[index]))
 
-    const E_28 = 31700, A = 0.000045, B = 10
+    const A = 0.000045, B = 10
     const eps_sh_inf = 0.001250, C_d_inf = 0.000090, Q = 0.000100
-    const P_Ar1 = 1, P_Ar2 = 0.3, P_Ar3 = 0.2
 
-    const C_t = arr_days.map(item => A * item ** (1 / 3))
+    // Eq. 6.14: C(t) = A * t_hours^0.25 (t measured from initial loading, in hours)
+    const C_t = arr_hours.map(item => A * item ** 0.25)
     const theta = arr_days.map(item => item ** 0.25 * 250)
     const eps_t = theta.map(item => (-1 * Math.cos(Math.PI / 180 * item) + 1) * 30 / 1000000)
-    const E_t = arr_days.map(item => E_28 * (item / (P_Ar1 + P_Ar2 * item)) ** P_Ar3)
+    // Gl. V-41 (Aldrian): E_SpC(t) = E_SpC(28d) * sqrt(t_hours / (4.2 + 0.85*t_hours)),
+    // true concrete age in hours. Pairs with the Aldrian strength curve (Gl. V-42) used
+    // for the target/capacity curve below.
+    const t_real_hours = arr_hours.map(h => t0Days * 24 + h)
+    const E_t = t_real_hours.map(h => E_c * Math.sqrt(h / (4.2 + 0.85 * h)))
     const eps_sh = arr_days.map(item => eps_sh_inf * item / (item + B))
 
     const sigma_2 = [0], eps_d = [0]
@@ -83,16 +87,18 @@ function rateOfFlow(dispObj, rate) {
             const del_eps_sh = eps_sh[index] - eps_sh[index - 1]
             const del_eps_t = eps_t[index] - eps_t[index - 1]
             const del_C_t = C_t[index] - C_t[index - 1]
-            const value_eps_d = (sigma_2[index - 1] * C_d_inf - eps_d[index - 1]) * (1 - Math.exp(-del_C_t / Q))
+            // Eq. 6.15: eps_d2 = (sigma_1 * Cd_inf - eps_d1) * (1 - exp(-dC/Q)) + eps_d1
+            const value_eps_d = (sigma_2[index - 1] * C_d_inf - eps_d[index - 1]) * (1 - Math.exp(-del_C_t / Q)) + eps_d[index - 1]
             eps_d.push(value_eps_d)
+            // Eq. 6.13: numerator uses the current-step eps_d2 just computed above
             const value_sigma_2 = ((del_eps[index] - del_eps_sh - del_eps_t +
-                eps_d[index - 1] * (1 - Math.exp(-del_C_t / Q)) +
+                value_eps_d * (1 - Math.exp(-del_C_t / Q)) +
                 sigma_2[index - 1] / E_t[index]) /
                 (C_d_inf * (1 - Math.exp(-del_C_t / Q)) + del_C_t + (1 / E_t[index])))
             sigma_2.push(value_sigma_2)
         }
     }
-    return [sigma_2, arr_hours]
+    return [sigma_2, arr_hours, arr_disp]
 }
 
 // ─── Main ground curve calculation ───────────────────────────────────────────
@@ -105,6 +111,8 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield] =
         [gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
             dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield].map(Number)
+
+    E *= 1000 // E entered in MPa, internal pressure terms (p_o, c) are in kPa
 
     const p_o = gamma * H
     const Phi = phi * Math.PI / 180
@@ -295,7 +303,7 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
         // Remove residual LSC gap from wall displacement (post-gap, full u_gap consumed)
         const p_x_l_spc = p_x_l_rof.map(u => u - Math.min(Math.max(u - u_io, 0), u_gap))
-        const arrROF = rateOfFlow({ x: p_x_l_spc, y: p_y_l_rof }, advance_rate)
+        const arrROF = rateOfFlow({ x: p_x_l_spc, y: p_y_l_rof }, advance_rate, E_c, t_gap_days)
         data_object.LDP = LDP
         // Offset actualStress time by t_gap_days so concrete age is correct for utilisation
         data_object.actualStress = { x: arrROF[1].map(item => t_gap_days + item / 24), y: arrROF[0] }

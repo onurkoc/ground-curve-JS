@@ -9,7 +9,7 @@
           <ParamRow v-model="p.gamma"   label="γ"    unit="kN/m³" :min="15"     :max="30"       :step="0.1"   :fractionDigits="1" @change="emit('change')" />
           <ParamRow v-model="p.H"       label="H"    unit="m"     :min="10"     :max="1000"     :step="1"     :fractionDigits="0" @change="emit('change')" />
           <ParamRow v-model="p.nu"      label="ν"    unit="—"     :min="0.05"   :max="0.49"     :step="0.01"  :fractionDigits="2" @change="emit('change')" />
-          <ParamRow v-model="p.E"       label="E"    unit="kPa"   :min="10000"  :max="16000000" :step="10000" :fractionDigits="0" :useGrouping="true" @change="emit('change')" />
+          <ParamRow v-model="p.E"       label="E"    unit="MPa"   :min="10"     :max="16000"    :step="10"    :fractionDigits="0" :useGrouping="true" @change="emit('change')" />
           <ParamRow v-model="p.c"       label="c"    unit="kPa"   :min="0"      :max="10000"    :step="10"    :fractionDigits="0" @change="emit('change')" />
           <ParamRow v-model="p.phi"     label="φ"    unit="°"     :min="0"      :max="45"       :sliderMin="15" :step="0.1" :fractionDigits="1" @change="emit('change')" />
         </AccordionContent>
@@ -27,7 +27,7 @@
       <AccordionPanel value="shotcrete">
         <AccordionHeader>Shotcrete Properties</AccordionHeader>
         <AccordionContent>
-          <ParamRow v-model="p.f_ck"          label="f_ck"     unit="MPa"   :min="10"  :max="40"    :step="1"    :fractionDigits="0" @change="emit('change')" />
+          <ParamRow v-model="p.f_ck"          label="f_ck"     unit="MPa"   :min="10"  :max="60"    :step="1"    :fractionDigits="0" @change="emit('change')" />
           <ParamRow v-model="p.E_c"           label="E_c"      unit="MPa"   :min="3000" :max="35000" :step="1000" :fractionDigits="0" @change="emit('change')" />
           <ParamRow v-model="p.nu_c"          label="ν_c"      unit="—"     :min="0.1"  :max="0.3"   :step="0.01" :fractionDigits="2" @change="emit('change')" />
           <ParamRow v-model="p.t_c"           label="t_c"      unit="m"     :min="0"    :max="1"     :step="0.05" :fractionDigits="2" @change="emit('change')" />
