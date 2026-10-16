@@ -297,7 +297,9 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const p_max_total = lscCurves ? y_support_el[y_support_el.length - 1] : p_scmax_el
     data_object.lsc = {
         F_LSC, p_LSC, r_m, u_gap, inPlateau: false,
-        FS_shotcrete: null, boltUtilisation: null, remainingYieldPath: null
+        FS_shotcrete: null, boltUtilisation: null, remainingYieldPath: null,
+        // start/end of yielding { t [d], u [m] } in the rate-of-flow time series (F_LSC > 0)
+        yieldRateOfFlow: null
     }
     data_object.supportComponents = lscCurves
     if (intersection && lscCurves) {
@@ -372,30 +374,43 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
         data_object.LDP = LDP
         if (lscCurves && p_LSC > 0) {
-            // LSC with load (Gschwandtner S. 56), three phases:
-            //   u_io … u_lsc = u_io + p_LSC/K_SpC: elastic rise of the shell, rate of flow from 0
-            //     as without LSC; the element limits the stress to σ_N = F_LSC / t_c
-            //   u_lsc … end of the yield path: constant σ_N
+            // LSC with load (Gschwandtner S. 56), force-controlled in time, three phases:
+            //   rise: rate of flow from 0 as without LSC, until σ(t) reaches σ_N = F_LSC / t_c
+            //     (not at u_lsc of the 28-day support curve; the young shell is softer)
+            //   yield path: constant σ_N from the start of yielding u_ys to u_ys + u_gap
             //   after the yield path: rate of flow continues from σ_N
+            // If σ_N is never reached the element does not yield and the rise covers the whole series.
             const sigma_N = F_LSC / 1000 / t_c                    // kN/m / m -> MPa
             const t_of = i => (p_y_l_ss[i] - p_y_l_ss[0]) / advance_rate
-            let endIdx = p_x_l_ss.findIndex(u => u >= lscCurves.yieldEnd)
-            if (endIdx < 0) endIdx = p_x_l_ss.length              // equilibrium on the plateau
-            let lscIdx = p_x_l_ss.findIndex(u => u >= lscCurves.yieldStart)
-            if (lscIdx < 0) lscIdx = p_x_l_ss.length              // equilibrium before the plateau
-            lscIdx = Math.min(lscIdx, endIdx)
-            const stressX = [], stressY = []
-            if (lscIdx > 0) {
-                const rise = rateOfFlow({ x: p_x_l_ss.slice(0, lscIdx), y: p_y_l_ss.slice(0, lscIdx) },
-                    advance_rate, E_c)
-                rise[0].forEach((s, i) => { stressX.push(t_of(i)); stressY.push(Math.min(s, sigma_N)) })
+            const rise = rateOfFlow({ x: p_x_l_ss, y: p_y_l_ss }, advance_rate, E_c)[0]
+            let lscIdx = rise.findIndex(s => s >= sigma_N)
+            if (lscIdx < 0) lscIdx = p_x_l_ss.length              // σ_N not reached: no yielding
+            const yieldRof = { start: null, end: null }
+            let endIdx = p_x_l_ss.length
+            if (lscIdx < p_x_l_ss.length) {
+                // start of yielding where σ crosses σ_N (linear between the neighbouring points)
+                const i0 = Math.max(lscIdx - 1, 0)
+                const f = lscIdx > 0 && rise[lscIdx] > rise[i0] ? (sigma_N - rise[i0]) / (rise[lscIdx] - rise[i0]) : 1
+                const lerp = (a, b) => a + (b - a) * f
+                const u_ys = lerp(p_x_l_ss[i0], p_x_l_ss[lscIdx])
+                yieldRof.start = { t: lerp(t_of(i0), t_of(lscIdx)), u: u_ys }
+                const found = p_x_l_ss.findIndex(u => u >= u_ys + u_gap)
+                if (found >= 0) {
+                    endIdx = found
+                    const j0 = found - 1
+                    const g = (u_ys + u_gap - p_x_l_ss[j0]) / (p_x_l_ss[found] - p_x_l_ss[j0])
+                    yieldRof.end = { t: t_of(j0) + (t_of(found) - t_of(j0)) * g, u: u_ys + u_gap }
+                }
             }
+            data_object.lsc.yieldRateOfFlow = yieldRof
+            const stressX = [], stressY = []
+            for (let i = 0; i < lscIdx; i++) { stressX.push(t_of(i)); stressY.push(rise[i]) }
             for (let i = lscIdx; i < endIdx; i++) { stressX.push(t_of(i)); stressY.push(sigma_N) }
             if (endIdx < p_x_l_ss.length) {
                 const t_gap_days = t_of(endIdx)
                 // Remove the yield path from the wall displacement: only the rest strains the shell
                 const u_spc = p_x_l_ss.slice(endIdx).map(u =>
-                    u - Math.min(Math.max(u - lscCurves.yieldStart, 0), u_gap))
+                    u - Math.min(Math.max(u - yieldRof.start.u, 0), u_gap))
                 // The shell has been loaded since u_io: creep, shrinkage and thermal terms count
                 // from there, not from the end of the yield path
                 const rof = rateOfFlow({ x: u_spc, y: p_y_l_ss.slice(endIdx) }, advance_rate, E_c,

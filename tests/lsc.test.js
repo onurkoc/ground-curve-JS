@@ -79,10 +79,10 @@ test('Bolts act independently of the LSC yield path', () => {
     assert.ok(obj.lsc.boltUtilisation > 0 && obj.lsc.boltUtilisation <= 1)
 })
 
-// Gschwandtner S. 56: the shell rises elastically until the element yields (u_lsc = u_io + p_LSC/K),
-// then carries the constant stress σ_N = F_LSC / t_c while the element yields.
-test('Rate of flow: rise to u_lsc, constant σ_N = F_LSC / t_c during the yield path', () => {
-    // Equilibrium on the plateau: rise from 0 (rate of flow, limited to σ_N), then σ_N to the end
+// Gschwandtner S. 56, force-controlled in time: the shell rises (rate of flow) until σ(t) reaches
+// σ_N = F_LSC / t_c, then carries σ_N while the element yields over u_gap.
+test('Rate of flow: rise until σ(t) = σ_N, constant σ_N over the yield path u_gap', () => {
+    // Equilibrium on the plateau: rise from 0, then σ_N to the end; yield end not reached
     const plateau = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 2400 }).obj
     const sigma_N = 2400 / 1000 / DEFAULTS.t_c
     const p = plateau.actualStress.y
@@ -91,15 +91,25 @@ test('Rate of flow: rise to u_lsc, constant σ_N = F_LSC / t_c during the yield 
     assert.equal(p[0], 0)
     p.slice(0, k).forEach((v, i) => assert.ok(v < sigma_N && (i === 0 || v >= p[i - 1]), `rise at ${i}: ${v}`))
     assert.ok(p.slice(k).every(v => Math.abs(v - sigma_N) < 1e-12))
+    const y = plateau.lsc.yieldRateOfFlow
+    assert.ok(y.start && y.end === null)
+    assert.ok(y.start.t > plateau.actualStress.x[k - 1] && y.start.t <= plateau.actualStress.x[k])
+    // the young shell is softer than the 28-day curve: yielding starts later than u_lsc
+    assert.ok(y.start.u > plateau.supportComponents.yieldStart)
 
-    // Yield path used up before equilibrium: rise, σ_N over the yield path, then rate of flow
+    // Yield path used up within the series: rise, σ_N from u_ys to u_ys + u_gap, then rate of flow
     // continues from σ_N (the shell is loaded further, no drop back towards 0)
-    const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 600 })
+    const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 10, F_LSC: 600 })
     const sN = 600 / 1000 / DEFAULTS.t_c
-    const s = obj.actualStress.y
+    const { start, end } = obj.lsc.yieldRateOfFlow
+    assert.ok(Math.abs(end.u - start.u - obj.lsc.u_gap) < 1e-15)
+    const s = obj.actualStress.y, t = obj.actualStress.x
     const a = s.findIndex(v => Math.abs(v - sN) < 1e-12)
     const n = a + s.slice(a).findIndex(v => Math.abs(v - sN) > 1e-12)
     assert.ok(a > 1 && n > a && n < s.length)
+    assert.ok(t[a - 1] < start.t && start.t <= t[a])
+    // rateOfFlow() repeats its start value σ_N once, so σ leaves σ_N one point after the yield end
+    assert.ok(t[n - 3] < end.t && end.t <= t[n - 2])
     assert.ok(s.slice(0, a).every(v => v < sN))
     assert.ok(s[n] >= s[n - 1], `drop at end of yield path: ${s[n - 1]} -> ${s[n]}`)
     // rateOfFlow() returns σ = 0 for the first two points (as without LSC)

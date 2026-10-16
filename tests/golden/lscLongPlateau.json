@@ -1013,6 +1013,13 @@
   "inPlateau": true,
   "FS_shotcrete": 9.506250000000001,
   "boltUtilisation": null,
-  "remainingYieldPath": 454.59864395775645
+  "remainingYieldPath": 454.59864395775645,
+  "yieldRateOfFlow": {
+   "start": {
+    "t": 0.04055388658634712,
+    "u": 0.06487943003599314
+   },
+   "end": null
+  }
  }
 }
