@@ -27,11 +27,20 @@ A web application for analytical pre-design of tunnel support using the **Conver
 - **Large strain (optional display)** — sidebar checkbox *Large strain (Vrakas & Anagnostou 2015)* overlays the large-strain ground curve in the Basic and Enhanced charts. Display only: equilibrium, FS and LDP are always computed with the small-strain solution.
 - **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2009)
 - **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek)
-- **LSC (Lining Stress Controller) support** — yield gap modelled as an open slot: zero shotcrete stress until the gap is exhausted (see [docs/LSC-Analyse.md](docs/LSC-Analyse.md) for the comparison with Gschwandtner's constant-stress model)
+- **LSC (Lining Stress Controller) support, single stage** — after Gschwandtner (2010). Inputs:
+  - `LSC` = yield path l_yield [cm], tangential (sum over the ring); radial u_gap = l_yield / 2π
+  - `F_LSC` = ring normal force carried while the element yields [kN per m tunnel], default 0.
+    Support pressure on the plateau p_LSC = F_LSC / r_m with r_m = D/2 − t_c/2 (Anhang D, Gl. 2-10 D)
+
+  Support curve: elastic rise to p_LSC → constant p_LSC over u_gap → elastic rise to p_max.
+  F_LSC = 0 gives the former open-slot model (zero pressure until the gap is closed).
+  If the equilibrium lies on the plateau, the legend shows *FS (shotcrete) = p_max / p_LSC* and the
+  *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
 - **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
-- **Safety factor FS** — at GRC ∩ SCC equilibrium
-- **Parameter tab** — summary of all 19 input parameters with units
+- **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments are searched, so FS > 10 is found as well)
+- **Parameter tab** — summary of all 20 input parameters with units
+- **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart
 
 ---
 
@@ -75,7 +84,7 @@ npm run preview    # serve dist/ locally
 npm run test
 ```
 
-Runs the verification cases against published values (Hoek *Rock-Support Interaction*, RocSupport Verification Manual Problem 5) and the golden regression baseline in `tests/golden/` (regenerate deliberately with `UPDATE_GOLDEN=1 npm run test`).
+Runs the verification cases against published values (Hoek *Rock-Support Interaction*, RocSupport Verification Manual Problem 5, Gschwandtner Anhang B for the LSC force) and the golden regression baseline in `tests/golden/` (regenerate deliberately with `UPDATE_GOLDEN=1 npm run test`).
 
 ---
 
@@ -90,7 +99,7 @@ Runs the verification cases against published values (Hoek *Rock-Support Interac
 | Lining forces | Möller, S.C. & Vermeer, P.A. (2005). Prediction of settlements and structural forces in linings due to tunnelling. Proc. 5th Int. Conf. of TC28 of the ISSMGE, Amsterdam |
 | Shotcrete strength and stiffness (time) | Aldrian, W. (1991). *Beitrag zum Materialverhalten von früh belastetem Spritzbeton*. Dissertation |
 | Rate-of-Flow / utilisation | Schubert, P. (1988). Beitrag zum rheologischen Verhalten von Spritzbeton. *Felsbau* 6(3), 150–153; implementation after Entfellner, M. (2024), Dissertation TU Graz, Chp. 6 |
-| LSC (yielding elements) | Gschwandtner, G. G. (2010). Masterarbeit, Montanuniversität Leoben, Kap. V-4.1.5 (Stauchelemente) and V-4.3 |
+| LSC (yielding elements) | Gschwandtner, G. G. (2010). Masterarbeit, Montanuniversität Leoben, Kap. V-4.1.5 (Stauchelemente), V-4.3, Anhang B, Anhang D Gl. 2-10 D (p_i = F / r_m) |
 
 ---
 
