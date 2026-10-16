@@ -1,7 +1,18 @@
 <template>
   <div class="app-layout">
 
-    <ParameterPanel :params="params" v-model:largeStrain="showLargeStrain" @change="recalculate" />
+    <!-- Phone only (≤ 768 px): bar with toggle for the parameter sidebar -->
+    <div class="mobile-bar">
+      <button type="button" class="mobile-bar-toggle" :aria-expanded="sidebarOpen"
+        aria-controls="parameter-sidebar" @click="sidebarOpen = !sidebarOpen">
+        <i :class="sidebarOpen ? 'pi pi-times' : 'pi pi-sliders-h'" aria-hidden="true"></i>
+        <span>Parameters</span>
+      </button>
+    </div>
+    <div v-if="isMobile && sidebarOpen" class="sidebar-backdrop" @click="sidebarOpen = false"></div>
+
+    <ParameterPanel id="parameter-sidebar" :class="{ 'sidebar--open': sidebarOpen }"
+      :params="params" v-model:largeStrain="showLargeStrain" @change="recalculate" />
 
     <div class="chart-area">
       <Tabs value="basic" class="chart-tabs" @update:value="onTabChange">
@@ -47,7 +58,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import Plotly from 'plotly.js-cartesian-dist'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
@@ -118,6 +129,17 @@ const paramEntries = computed(() => Object.entries(params))
 // Display only: overlay the large-strain ground curve (Vrakas & Anagnostou 2015)
 const showLargeStrain = ref(false)
 
+// ── Phone layout (≤ 768 px): collapsible sidebar, legend below the chart ─────
+const mobileQuery = window.matchMedia('(max-width: 768px)')
+const isMobile = ref(mobileQuery.matches)
+const sidebarOpen = ref(false)
+function onMediaChange(e) {
+  isMobile.value = e.matches
+  if (!e.matches) sidebarOpen.value = false
+}
+mobileQuery.addEventListener('change', onMediaChange)
+onBeforeUnmount(() => mobileQuery.removeEventListener('change', onMediaChange))
+
 // ── Recalculate and render ───────────────────────────────────────────────────
 function recalculate() {
   const p = params
@@ -126,12 +148,12 @@ function recalculate() {
     p.f_ck, p.E_c, p.nu_c, p.t_c,
     p.dis_sup, p.advance_rate,
     p.t_bf, p.s_l, p.s_r, p.d_b, p.l_b, p.l_yield,
-    { showLargeStrain: showLargeStrain.value }
+    { showLargeStrain: showLargeStrain.value, legendBelow: isMobile.value }
   )
 }
 
 onMounted(() => nextTick(() => recalculate()))
-watch(showLargeStrain, recalculate)
+watch([showLargeStrain, isMobile], recalculate)
 
 // ── Resize chart when switching to a tab that was hidden ─────────────────────
 function onTabChange(tabValue) {

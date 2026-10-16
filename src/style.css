@@ -199,6 +199,82 @@ html, body, #app {
     font-size: 0.78rem;
 }
 
+/* ── Phone layout (≤ 768 px) ─────────────────────────────────────────────── */
+.mobile-bar,
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --mobilebar-h: 44px;
+    }
+
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .mobile-bar {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        height: var(--mobilebar-h);
+        padding: 0 8px;
+        background: var(--color-sidebar);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .mobile-bar-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text);
+        background: var(--color-hover);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    /* Sidebar becomes a drawer over the chart, closed by default */
+    .sidebar {
+        position: fixed;
+        top: var(--mobilebar-h);
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+        width: min(320px, 88vw);
+        min-width: 0;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar.sidebar--open {
+        transform: none;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: var(--mobilebar-h) 0 0 0;
+        z-index: 15;
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    .chart-tab-content {
+        height: calc(100vh - var(--tabbar-h) - var(--mobilebar-h));
+        padding: 4px;
+    }
+
+    .chart-tabs .p-tab {
+        padding: 0 12px !important;
+    }
+}
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* PrimeVue component overrides (neutral / shadcn-style)                       */
 /* ─────────────────────────────────────────────────────────────────────────── */

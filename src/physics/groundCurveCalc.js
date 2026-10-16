@@ -340,6 +340,7 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
 // options.showLargeStrain: also plot the large-strain ground curve. Display only — equilibrium,
 // FS and LDP always use the small-strain solution.
+// options.legendBelow: horizontal legend under the chart (phone layout).
 export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, options = {}) {
 
@@ -491,6 +492,14 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         xaxis: { rangemode: 'nonnegative', title: { text: 'Tunnel Wall Displacement [m]', font: { family: 'Arial, sans-serif', size: 14 } }, color: 'black', range: [0, maxX], tickformat: '.3f' },
         yaxis: { scaleratio: 0.4, tickformat: '.1f', title: { text: 'Support Pressure [MPa]', font: { family: 'Arial, sans-serif', size: 14 } }, color: 'black', range: [0, maxY], rangemode: 'nonnegative' },
         legend: { traceorder: 'normal', font: { family: 'Arial, sans-serif', size: 16, color: '#000' }, bgcolor: '#E2E2E2', bordercolor: '#FFFFFF', borderwidth: 1.7, x: 0.99, xanchor: 'right', y: 0.99 }
+    }
+
+    if (options.legendBelow) {
+        const below = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top', font: { size: 11 } }
+        Object.assign(layout.legend, below)
+        Object.assign(layoutBasic.legend, below, { y: -0.18 })
+        layout.margin = { ...layout.margin, l: 50, r: 10 }
+        layoutBasic.margin = { ...layoutBasic.margin, l: 50, r: 10 }
     }
 
     Plotly.newPlot('graph', data, layout, { displayModeBar: true, displaylogo: false, responsive: true, modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'] })
