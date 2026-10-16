@@ -513,6 +513,10 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const obj = data_array[0]
     const intersect = data_array[1]
     const safety = data_array[2]
+    // No crossing of ground and support curve: the support capacity is below the ground pressure.
+    // FS, LDP, σ(t) and μ_SpC do not exist; the plots show a message instead of empty axes.
+    const noEquilibrium = typeof intersect.x !== 'number'
+    const NO_EQ_TEXT = 'no equilibrium – support capacity insufficient'
 
     const trace1 = {
         x: obj.groundCurve.x, y: obj.groundCurve.y,
@@ -532,13 +536,13 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         mode: 'lines', type: 'scatter', name: 'Support Curve',
         line: { color: 'red' }, xaxis: 'x1', yaxis: 'y1'
     }
+    const fsText = noEquilibrium ? '–' : Number(safety).toFixed(2)
     const trace3 = {
-        x: [intersect.x], y: [intersect.y],
+        x: noEquilibrium ? [0] : [intersect.x], y: noEquilibrium ? [0] : [intersect.y],
         mode: 'markers', type: 'scatter',
-        name: obj.supportComponents
-            ? `FS (total) = ${Number(safety).toFixed(2)}`
-            : `FS. ${Number(safety).toFixed(2)}`,
-        marker: { color: 'green', size: 10 }, xaxis: 'x1', yaxis: 'y1'
+        name: obj.supportComponents ? `FS (total) = ${fsText}` : `FS. ${fsText}`,
+        marker: { color: 'green', size: 10 }, xaxis: 'x1', yaxis: 'y1',
+        ...(noEquilibrium ? { opacity: 0, hoverinfo: 'none', showlegend: true } : {})
     }
     const trace3_1 = {
         x: obj.criticalPoint.x, y: obj.criticalPoint.y,
@@ -644,12 +648,14 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
     }
 
-    data.push({
-        x: obj.originalLDP.x, y: obj.originalLDP.y,
-        mode: 'lines', name: 'Org. LDP',
-        line: { color: 'blue', width: 1.5, dash: 'dashdot' },
-        hoverinfo: 'none', xaxis: 'x1', yaxis: 'y2'
-    })
+    if (!noEquilibrium) {
+        data.push({
+            x: obj.originalLDP.x, y: obj.originalLDP.y,
+            mode: 'lines', name: 'Org. LDP',
+            line: { color: 'blue', width: 1.5, dash: 'dashdot' },
+            hoverinfo: 'none', xaxis: 'x1', yaxis: 'y2'
+        })
+    }
     if (obj.utilisationSpC) {
         data.push({
             x: obj.utilisationSpC.x, y: obj.utilisationSpC.y,
@@ -684,10 +690,12 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
     }
     const muRangeMax = obj.utilisationSpC ? Math.max(110, Math.max(...obj.utilisationSpC.y) * 1.05) : 110
-    data.push({
-        x: obj.targetStress.x, y: obj.targetStress.y,
-        mode: 'lines', name: 'Stress (target)', line: { color: 'green' }, xaxis: 'x2', yaxis: 'y4'
-    })
+    if (!noEquilibrium) {
+        data.push({
+            x: obj.targetStress.x, y: obj.targetStress.y,
+            mode: 'lines', name: 'Stress (target)', line: { color: 'green' }, xaxis: 'x2', yaxis: 'y4'
+        })
+    }
 
     const maxX = Math.max(...obj.groundCurve.x)
     const maxY = Math.max(...obj.groundCurve.y)
@@ -737,6 +745,29 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         for (const axis of ['xaxis', 'xaxis2', 'yaxis', 'yaxis2', 'yaxis3', 'yaxis4']) {
             layout[axis].title.font = { ...layout[axis].title.font, size: 11 }
         }
+    }
+    if (noEquilibrium) {
+        const message = (xref, yref, x, y, xanchor, yanchor) => ({
+            xref, yref, x, y, xanchor, yanchor, text: NO_EQ_TEXT, showarrow: false,
+            font: { family: 'Arial, sans-serif', size: options.legendBelow ? 11 : 13, color: '#b00000' },
+            bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#b00000', borderwidth: 1, borderpad: 4
+        })
+        // GRC: top right, where the ground curve is low; LDP, μ_SpC and σ panels: centred, no traces
+        layout.annotations = [
+            message('x domain', 'y domain', 0.98, 0.95, 'right', 'top'),
+            message('x domain', 'y2 domain', 0.5, 0.5, 'center', 'middle'),
+            message('x2 domain', 'y3 domain', 0.5, 0.5, 'center', 'middle'),
+            message('x2 domain', 'y4 domain', 0.5, 0.5, 'center', 'middle')
+        ]
+        for (const axis of ['xaxis2', 'yaxis2', 'yaxis3', 'yaxis4']) {
+            Object.assign(layout[axis], { showticklabels: false, showgrid: false, zeroline: false })
+        }
+        // Plotly draws a subplot only if it holds a trace: invisible placeholders keep the empty panels
+        for (const [xaxis, yaxis] of [['x1', 'y2'], ['x2', 'y3'], ['x2', 'y4']]) {
+            data.push({ x: [0], y: [0], mode: 'markers', opacity: 0, showlegend: false, hoverinfo: 'none', xaxis, yaxis })
+        }
+        // Basic: legend sits top right, so the message goes to the lower middle
+        layoutBasic.annotations = [message('x domain', 'y domain', 0.5, 0.3, 'center', 'middle')]
     }
     // Enhanced, loaded LSC: note under the title, the top margin grows by the note's lines
     if (lscNote) {
