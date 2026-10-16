@@ -63,6 +63,20 @@ Commit 799116f ohne ausdrücklichen Auftrag.
 2. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
 3. **Prüfung auf echtem Handy** (bisher nur Browser-Emulator 390 × 844).
+4. **Zeitreihe σ(t)/μ_SpC endet vor u_eq** (alle Fälle, auch ohne LSC). Ursache in `groundCurve()`:
+   `ldpInverse()` (Z. 21) gibt null zurück, sobald u ≥ u_im(p_inc); diese Schritte fallen in Z. 354–357 weg.
+   u_im(p_inc) (Z. 344) nutzt (1 − 2ν)·p_o statt (1 − 2ν)·(p_o − p_inc) und liegt damit um
+   r_o(1 + ν)(1 − 2ν)·p_inc / E unter der Gebirgskennlinie. Der Bereich x = −25 … 80 m (Z. 325) gilt nur für die
+   grauen LDP-Kurven; die Zeitreihe nutzt x aus `ldpInverse()` ohne Grenze.
+
+   | Fall | u_eq [m] | u Ende Zeitreihe [m] | Differenz [mm] | x Ende [m] | t Ende [d] | LDP(p_eq) bei x 80 m [m] |
+   |---|---|---|---|---|---|---|
+   | (a) Standard ohne LSC | 0,06689 | 0,06672 | 0,18 | 30,05 | 14,03 | 0,06437 |
+   | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 | 0,59 | 30,43 | 14,22 | 0,09601 |
+   | (c) Fall C | 0,08772 | 0,08714 | 0,58 | 35,45 | 16,72 | 0,08636 |
+
+   Folge (b): Stauchende nach Fließratenmethode 0,09649 m liegt hinter dem Ende der Zeitreihe; Phase 3
+   wird nicht erreicht. Test „after the yield path …" in `tests/lsc.test.js` steht deshalb auf `todo`.
 
 Weitere Hinweise:
 
@@ -71,9 +85,6 @@ Weitere Hinweise:
   Fließratenmethode u 0,06576 m / t 0,149 d; Stauchende 0,09725 bzw. 0,09759 m, in beiden nicht erreicht
   (Gleichgewicht im Plateau). μ_SpC > 100 % von 0,011 bis 0,60 d, Maximum 371 % bei 0,148 d,
   Minimum 41,0 % bei 16,72 d. Kein Spannungssprung mehr am Stauchbeginn.
-- Die Zeitreihe endet vor u_eq (LDP-Zuordnung, z. B. F_LSC 600 kN/m, LSC 20 cm, ohne Anker: letzte Stelle
-  0,09640 m, u_eq 0,09699 m). Liegt das Stauchende nach Fließratenmethode dazwischen, endet die Zeitreihe
-  im Plateau, obwohl die 28-Tage-Kennlinie das Gleichgewicht nach dem Stauchweg hat.
 - Anker (App-Standard: T_bf 250 kN, s_l 2 m, s_r 1,5 m, d_b 0,034 m, l_b 3 m) erreichen p_max,bolt
   0,0833 MPa nach Δu = p_bmax_el / k_b_el = 0,0833 / 20,88 = 3,99 mm (nicht 0,2 mm).
 - Ungenutzte Abhängigkeiten `regression`, `@turf/helpers`, `@turf/line-intersect`.
