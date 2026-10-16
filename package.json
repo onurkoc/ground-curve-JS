@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron-vite dev",
     "build": "electron-vite build",
-    "package-win": "npm run build && electron-packager . GroundCurve --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --ignore=\"^/src|^/electron|^/\\.vite|^/index\\.html|^/release-builds\" --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\""
+    "package-win": "npm run build && electron-packager . GroundCurve --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --ignore=\"^/src|^/electron|^/\\.vite|^/index\\.html|^/release-builds\" --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\"",
+    "test": "node --import ./tests/register-stubs.mjs --test tests/hoek.test.js tests/rocsupport.test.js tests/golden.test.js"
   },
   "author": "Onur Koc",
   "license": "MIT",
