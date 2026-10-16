@@ -11,7 +11,12 @@ export const SETS = {
     // Defaults with LSC yield length 20 cm (u_gap = 0.2 m / 2π)
     lsc: { ...DEFAULTS, l_yield: 20 },
     // Defaults with a slow advance (0.5 m/d) to exercise the rate-of-flow model
-    rateOfFlow: { ...DEFAULTS, advance_rate: 0.5 }
+    rateOfFlow: { ...DEFAULTS, advance_rate: 0.5 },
+    // Single-stage LSC after Gschwandtner (F_LSC > 0). Regression baseline only: these values
+    // come from the app itself, not from a source (cases B, C, D of docs/LSC-Analyse.md).
+    lscForce600: { ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 600 },
+    lscForce2400Plateau: { ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 2400 },
+    lscLongPlateau: { ...DEFAULTS, t_bf: 0, l_yield: 80, F_LSC: 600 }
 }
 
 // Every n-th point of long curves keeps the files small while still pinning the shape.
@@ -36,7 +41,9 @@ function snapshot(inputs) {
         targetSupportPressure: sampleXY(obj.targetSupportPressure, 24),
         LDP_redIntersect: obj.LDP ? sampleXY(obj.LDP.redIntersect, 10) : null,
         actualStress: sampleXY(obj.actualStress, 5),
-        utilisationSpC: sampleXY(obj.utilisationSpC, 5)
+        utilisationSpC: sampleXY(obj.utilisationSpC, 5),
+        // LSC state only for F_LSC > 0, so the F_LSC = 0 baselines keep their original content
+        ...(obj.lsc.p_LSC > 0 ? { lsc: obj.lsc } : {})
     }
 }
 

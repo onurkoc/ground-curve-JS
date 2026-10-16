@@ -87,6 +87,7 @@ const params = reactive({
   dis_sup:      2,
   advance_rate: 2,
   l_yield:      0,
+  F_LSC:        0,
   // Rock bolt
   t_bf: 250,
   s_l:  2,
@@ -111,6 +112,7 @@ const paramLabels = {
   dis_sup:      'SpC Distance',
   advance_rate: 'Advance Rate',
   l_yield:      'LSC Yield',
+  F_LSC:        'LSC Force',
   t_bf: 'Bolt Pull-out Force',
   s_l:  'Bolt Longitudinal Spacing',
   s_r:  'Bolt Radial Spacing',
@@ -121,7 +123,7 @@ const paramUnits = {
   gamma: 'kN/m³', H: 'm', nu: '—', E: 'MPa', c: 'kPa', phi: '°',
   D: 'm',
   f_ck: 'MPa', E_c: 'MPa', nu_c: '—', t_c: 'm',
-  dis_sup: 'm', advance_rate: 'm/day', l_yield: 'cm',
+  dis_sup: 'm', advance_rate: 'm/day', l_yield: 'cm', F_LSC: 'kN/m',
   t_bf: 'kN', s_l: 'm', s_r: 'm', d_b: 'm', l_b: 'm'
 }
 const paramEntries = computed(() => Object.entries(params))
@@ -147,7 +149,7 @@ function recalculate() {
     p.gamma, p.H, p.nu, p.E, p.D, p.c, p.phi,
     p.f_ck, p.E_c, p.nu_c, p.t_c,
     p.dis_sup, p.advance_rate,
-    p.t_bf, p.s_l, p.s_r, p.d_b, p.l_b, p.l_yield,
+    p.t_bf, p.s_l, p.s_r, p.d_b, p.l_b, p.l_yield, p.F_LSC,
     { showLargeStrain: showLargeStrain.value, legendBelow: isMobile.value }
   )
 }

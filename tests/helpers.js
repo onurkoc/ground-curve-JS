@@ -2,12 +2,12 @@ import { groundCurve } from '../src/physics/groundCurveCalc.js'
 
 // Argument order of groundCurve()
 export const ARG_ORDER = ['gamma', 'H', 'nu', 'E', 'D', 'c', 'phi', 'f_ck', 'E_c', 'nu_c', 't_c',
-    'dis_sup', 'advance_rate', 't_bf', 's_l', 's_r', 'd_b', 'l_b', 'l_yield']
+    'dis_sup', 'advance_rate', 't_bf', 's_l', 's_r', 'd_b', 'l_b', 'l_yield', 'F_LSC']
 
 // App default inputs (src/App.vue)
 export const DEFAULTS = {
     gamma: 20, H: 500, nu: 0.30, E: 1050, c: 1000, phi: 28, D: 8,
-    f_ck: 30, E_c: 31000, nu_c: 0.2, t_c: 0.2, dis_sup: 2, advance_rate: 2, l_yield: 0,
+    f_ck: 30, E_c: 31000, nu_c: 0.2, t_c: 0.2, dis_sup: 2, advance_rate: 2, l_yield: 0, F_LSC: 0,
     t_bf: 250, s_l: 2, s_r: 1.5, d_b: 0.034, l_b: 3
 }
 

@@ -60,16 +60,13 @@ test('Hoek rock bolts only, t_c = 0 (Fig. 13)', () => {
     check('bolts', hoekMetrics(BOLTS), BOLT_CHECKS)
 })
 
-// Known limitation (reported, not fixed): without LSC the intersection search starts at index 2 of
-// the support curve, i.e. at 10 % of p_max. If the equilibrium lies below 0.1 p_max (FS > 10),
-// no intersection is found and the app returns FS = 0.
+// Formerly a known limitation: the intersection search started at 10 % of p_max, so an
+// equilibrium with FS > 10 was missed (FS = 0). The search now starts at index 0.
 // Case: Hoek ground + shotcrete, but support installed 12 m behind the face.
-test('Known limitation: no equilibrium found for FS > 10 (support at 12 m)', () => {
+test('Equilibrium below 10 % of p_max is found (FS > 10, support at 12 m)', () => {
     const inputs = { ...SHOTCRETE, dis_sup: 12 }
     const { run } = helpers
     const { obj, intersection, safetyFactor } = run(inputs)
-    assert.equal(Number(safetyFactor), 0)
-    assert.deepEqual(intersection, { x: [], y: [] })
 
     // Independent check: intersect the full elastic support line from (u_io, 0) to (u_iy, p_max)
     // with the ground curve. An equilibrium exists, below 10 % of p_max.
@@ -82,7 +79,10 @@ test('Known limitation: no equilibrium found for FS > 10 (support at 12 m)', () 
         const f0 = gy[i] - K * (gx[i] - u_io), f1 = gy[i + 1] - K * (gx[i + 1] - u_io)
         if (f0 <= 0 && f1 >= 0) { p_eq = gy[i] + (gy[i + 1] - gy[i]) * (-f0) / (f1 - f0); break }
     }
-    console.table([{ dis_sup: 12, u_io, p_max, K, p_eq, FS_true: p_max / p_eq, app_FS: Number(safetyFactor) }])
+    console.table([{ dis_sup: 12, u_io, p_max, K, p_eq, FS_independent: p_max / p_eq, app_p_eq: intersection.y, app_FS: Number(safetyFactor) }])
     assert.ok(p_eq > 0 && p_eq < 0.1 * p_max)
     assert.ok(p_max / p_eq > 10)
+    // App and independent check agree within the ground-curve discretisation (10 000 points)
+    assert.ok(Math.abs(intersection.y - p_eq) / p_eq < 1e-3, `app p_eq ${intersection.y} vs. ${p_eq}`)
+    assert.ok(Number(safetyFactor) > 10)
 })

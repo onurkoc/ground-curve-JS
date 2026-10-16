@@ -38,9 +38,25 @@ function findIntersection(array) {
     return { x, y }
 }
 
+// EPS absorbs round-off of the computed intersection on horizontal or vertical segments
+// (e.g. the LSC plateau, where a.y === b.y).
+const EPS = 1e-12
 function isPointBetween(p, a, b) {
-    return ((a.x <= p.x && p.x <= b.x) || (a.x >= p.x && p.x >= b.x)) &&
-        ((a.y <= p.y && p.y <= b.y) || (a.y >= p.y && p.y >= b.y))
+    return Math.min(a.x, b.x) - EPS <= p.x && p.x <= Math.max(a.x, b.x) + EPS &&
+        Math.min(a.y, b.y) - EPS <= p.y && p.y <= Math.max(a.y, b.y) + EPS
+}
+
+// Walk the support curve segment by segment and return the first crossing with the ground curve
+// as [point, segmentIndex], or [false, -1].
+function findCurveIntersection(groundCurve, supportCurve) {
+    for (let s = 0; s < supportCurve.length - 1; s++) {
+        const P3 = supportCurve[s], P4 = supportCurve[s + 1]
+        // An open slot (p = 0 on both ends) carries no pressure: no support equilibrium there
+        if (P3.y === 0 && P4.y === 0) continue
+        const point = findSegmentIntersection(groundCurve, [P3, P4])
+        if (point) return [point, s]
+    }
+    return [false, -1]
 }
 
 function findSegmentIntersection(firstCurve, secondCurve) {
@@ -103,14 +119,15 @@ function rateOfFlow(dispObj, rate, E_c, t0Days = 0) {
 
 // ─── Main ground curve calculation ───────────────────────────────────────────
 
+// F_LSC: ring normal force carried by the LSC while it yields [kN per m tunnel], 0 = open slot
 export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield) {
+    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, F_LSC = 0) {
 
     // ensure all inputs are numbers
     ;[gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-        dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield] =
+        dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, F_LSC] =
         [gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-            dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield].map(Number)
+            dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, F_LSC].map(Number)
 
     E *= 1000 // E entered in MPa, internal pressure terms (p_o, c) are in kPa
 
@@ -191,12 +208,22 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     // Support curve (with LSC yield)
     const ratio_sc = p_scmax_el / k_sc_el
     const u_iy = u_io + ratio_sc
-    const u_gap = (l_yield / 100) / (2 * Math.PI)
+    // LSC after Gschwandtner (2010, Kap. V-4.1.5): while the element yields it carries a constant
+    // ring force. Anhang D Gl. 2-10 D (σ_N = p_i·r_m/e_SpC) gives p_LSC = F_LSC / r_m.
+    const r_m = D / 2 - t_c / 2
+    const p_LSC = F_LSC > 0 && r_m > 0 ? F_LSC / 1000 / r_m : 0   // kN/m / m -> MPa
+    // An element that only yields at or above the lining capacity never yields: no gap.
+    const u_gap = p_LSC < p_scmax_el ? (l_yield / 100) / (2 * Math.PI) : 0
 
-    // With LSC: zero stress from u_io until gap exhausted, then elastic rise.
-    // Without LSC: small pre-yield elastic phase (10%) then full elastic rise.
+    // With LSC, p_LSC > 0: elastic rise to p_LSC, constant p_LSC over the yield path, elastic rise.
+    // With LSC, p_LSC = 0: zero stress from u_io until gap exhausted (open slot), then elastic rise.
+    // Without LSC: elastic rise (the point at 10 % of p_max is kept for the plot).
     let x_support_el, y_support_el
-    if (u_gap > 0) {
+    if (u_gap > 0 && p_LSC > 0) {
+        const u_lsc = u_io + p_LSC / k_sc_el
+        x_support_el = [u_io, u_lsc, u_lsc + u_gap, u_iy + u_gap, u_iy * 1.01 + u_gap]
+        y_support_el = [0, p_LSC, p_LSC, p_scmax_el, p_scmax_el]
+    } else if (u_gap > 0) {
         x_support_el = [u_io, u_io + u_gap, u_iy + u_gap, u_iy * 1.01 + u_gap]
         y_support_el = [0, 0, p_scmax_el, p_scmax_el]
     } else {
@@ -220,18 +247,22 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         u_if: { u_if }
     }
 
-    // Build point arrays for intersection
+    // Build point arrays for intersection. All segments from index 0 are searched, except the
+    // closing plateau at p_max (drawn only to show the capacity).
     const groundCurvePoints = x.map((xi, i) => ({ x: xi, y: y[i] }))
-    const supportCurvePoints = []
-    // With LSC: rising segment starts at index 1 (end of yield gap).
-    // Without LSC: rising segment starts at index 2 (end of pre-yield elastic phase).
-    const sccRisingStart = u_gap > 0 ? 1 : 2
-    for (let index = sccRisingStart; index < x_support_el.length; index++) {
-        supportCurvePoints.push({ x: x_support_el[index], y: y_support_el[index] })
-    }
+    const supportCurvePoints = x_support_el.slice(0, -1).map((xi, i) => ({ x: xi, y: y_support_el[i] }))
 
     // Segment intersection (used for actual equilibrium)
-    let intersection = findSegmentIntersection(groundCurvePoints, supportCurvePoints)
+    let [intersection, segment] = findCurveIntersection(groundCurvePoints, supportCurvePoints)
+
+    // Equilibrium on the LSC plateau: the element is still yielding at p_LSC
+    data_object.lsc = { F_LSC, p_LSC, r_m, u_gap, inPlateau: false, FS_shotcrete: null, remainingYieldPath: null }
+    if (intersection && u_gap > 0 && p_LSC > 0 && segment === 1) {
+        data_object.lsc.inPlateau = true
+        data_object.lsc.FS_shotcrete = p_scmax_el / p_LSC
+        // remaining tangential yield path of the element [mm] (radial u × 2π)
+        data_object.lsc.remainingYieldPath = (x_support_el[2] - intersection.x) * 2 * Math.PI * 1000
+    }
     let safetyFactor
     if (intersection) {
         safetyFactor = (p_scmax_el / intersection.y).toFixed(3)
@@ -342,10 +373,10 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 // FS and LDP always use the small-strain solution.
 // options.legendBelow: horizontal legend under the chart (phone layout).
 export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, options = {}) {
+    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, F_LSC, options = {}) {
 
     const data_array = groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-        dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield)
+        dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, F_LSC)
     const obj = data_array[0]
     const intersect = data_array[1]
     const safety = data_array[2]
@@ -371,7 +402,9 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const trace3 = {
         x: [intersect.x], y: [intersect.y],
         mode: 'markers', type: 'scatter',
-        name: `FS. ${Number(safety).toFixed(2)}`,
+        name: obj.lsc.inPlateau
+            ? `FS (shotcrete) = p_max / p_LSC = ${obj.lsc.FS_shotcrete.toFixed(2)}`
+            : `FS. ${Number(safety).toFixed(2)}`,
         marker: { color: 'green', size: 10 }, xaxis: 'x1', yaxis: 'y1'
     }
     const trace3_1 = {
@@ -398,6 +431,15 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
     const data = [trace1, trace2, trace3, trace3_1]
     const dataBasic = [trace1, trace2, trace3, trace3_1, trace3_2, trace3_4]
+    if (obj.lsc.inPlateau) {
+        const traceYieldPath = {
+            x: [0], y: [0], mode: 'markers', type: 'scatter',
+            visible: true, showlegend: true, hoverinfo: 'none', opacity: 0,
+            name: `remaining yield path: ${obj.lsc.remainingYieldPath.toFixed(1)} mm`
+        }
+        data.splice(3, 0, traceYieldPath)
+        dataBasic.splice(3, 0, traceYieldPath)
+    }
     if (options.showLargeStrain) {
         data.splice(1, 0, trace1_1)
         dataBasic.splice(1, 0, trace1_1)
