@@ -30,19 +30,60 @@ test('Anhang B: p_LSC, yield path and p_max (source values)', () => {
     for (const r of rows) assert.ok(r.ok, `${r.key}: target ${r.target}, app ${r.app}`)
 
     // Shape: [u_io, 0] -> [u_io + p_LSC/K, p_LSC] -> [+ Δu, p_LSC] -> [u_iy + Δu, p_max]
+    // (the curve is evaluated point by point when summed, so compare within round-off)
     assert.equal(y0, 0)
-    assert.equal(y1, obj.lsc.p_LSC)
-    assert.equal(y2, obj.lsc.p_LSC)
+    assert.ok(Math.abs(y1 - obj.lsc.p_LSC) < 1e-12)
+    assert.ok(Math.abs(y2 - obj.lsc.p_LSC) < 1e-12)
     assert.ok(u_io < u_lsc && u_lsc < u_end && u_end < u_top)
     const K = (y3 - y2) / (u_top - u_end)
     assert.ok(Math.abs((y1 - y0) / (u_lsc - u_io) - K) / K < 1e-9, 'same stiffness before and after the plateau')
 })
 
-test('F_LSC = 0 keeps the open-slot curve', () => {
-    const { obj } = run({ ...DEFAULTS, l_yield: 20, F_LSC: 0 })
+test('F_LSC = 0 keeps the open-slot curve (shotcrete only)', () => {
+    const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 0 })
     assert.equal(obj.supportCurve.x.length, 4)
     assert.deepEqual(obj.supportCurve.y.slice(0, 2), [0, 0])
     assert.equal(obj.lsc.inPlateau, false)
+})
+
+// Gschwandtner Gl. V-50 / Abb. V-51: the bolt curve starts at u_io and is not shifted by the yield
+// path; the support curve is the sum of shotcrete and bolt pressures at equal u.
+test('Bolts act independently of the LSC yield path', () => {
+    const inputs = { ...DEFAULTS, l_yield: 20, F_LSC: 2400 }
+    const { obj } = run(inputs)
+    const { shotcrete, bolts } = obj.supportComponents
+    const u_io = obj.supportCurve.x[0]
+    assert.equal(bolts.x[0], u_io)
+    assert.equal(shotcrete.x[0], u_io)
+    // p_max,bolt = T_bf / (s_l s_r), K_bolt = E_s π d_b² / (4 l_b s_l s_r)
+    const p_bmax = inputs.t_bf / (1000 * inputs.s_l * inputs.s_r)
+    const K_b = 207000 * Math.PI * inputs.d_b ** 2 / (4 * inputs.l_b * inputs.s_l * inputs.s_r)
+    assert.ok(Math.abs(bolts.y[1] - p_bmax) < 1e-12)
+    assert.ok(Math.abs(bolts.x[1] - (u_io + p_bmax / K_b)) < 1e-12)
+    // Every break point of both curves is in the sum, and the sum adds the pressures
+    for (const u of [...shotcrete.x, ...bolts.x]) assert.ok(obj.supportCurve.x.includes(u))
+    const at = (c, u) => {
+        if (u <= c.x[0]) return 0
+        for (let i = 0; i < c.x.length - 1; i++) {
+            if (u <= c.x[i + 1]) return c.y[i] + (c.y[i + 1] - c.y[i]) * (u - c.x[i]) / (c.x[i + 1] - c.x[i])
+        }
+        return c.y[c.y.length - 1]
+    }
+    obj.supportCurve.x.slice(0, -1).forEach((u, i) => {
+        assert.ok(Math.abs(obj.supportCurve.y[i] - (at(shotcrete, u) + at(bolts, u))) < 1e-12)
+    })
+    // On the plateau: FS (shotcrete) = p_max,SpC / p_LSC, bolt utilisation = p_bolt(u_eq) / p_max,bolt
+    const p_max_spc = shotcrete.y[shotcrete.y.length - 1]
+    assert.equal(obj.lsc.inPlateau, true)
+    assert.ok(Math.abs(obj.lsc.FS_shotcrete - p_max_spc / obj.lsc.p_LSC) < 1e-12)
+    assert.ok(obj.lsc.boltUtilisation > 0 && obj.lsc.boltUtilisation <= 1)
+})
+
+test('Shotcrete capacity decides whether the LSC yields (bolts not included)', () => {
+    // p_LSC between p_max,SpC (1.4625 MPa) and p_max,SpC + p_max,bolt (1.5458 MPa): never yields
+    const r_m = DEFAULTS.D / 2 - DEFAULTS.t_c / 2
+    const { obj } = run({ ...DEFAULTS, l_yield: 20, F_LSC: 1.5 * 1000 * r_m })
+    assert.equal(obj.lsc.u_gap, 0)
 })
 
 test('Equilibrium on the LSC plateau: FS (shotcrete) and remaining yield path', () => {
@@ -51,7 +92,7 @@ test('Equilibrium on the LSC plateau: FS (shotcrete) and remaining yield path', 
     assert.equal(lsc.inPlateau, true)
     assert.ok(Math.abs(intersection.y - lsc.p_LSC) < 1e-9)
     const p_max = obj.supportCurve.y[3]
-    assert.ok(Math.abs(lsc.FS_shotcrete - p_max / lsc.p_LSC) < 1e-12)
+    assert.ok(Math.abs(lsc.FS_shotcrete - p_max / lsc.p_LSC) < 1e-9)
     assert.ok(Math.abs(Number(safetyFactor) - lsc.FS_shotcrete) < 0.001)
     const expected = (obj.supportCurve.x[2] - intersection.x) * 2 * Math.PI * 1000
     assert.ok(lsc.remainingYieldPath > 0 && Math.abs(lsc.remainingYieldPath - expected) < 1e-9)
