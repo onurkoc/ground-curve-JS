@@ -1,36 +1,37 @@
 # GroundCurve — Tunnel Ground Reaction Analysis (JavaScript)
 
-A desktop application for analytical pre-design of tunnel support using the **Convergence-Confinement Method (CCM)**. This is the JavaScript/Electron reimplementation of the original Python version.
+A web application for analytical pre-design of tunnel support using the **Convergence-Confinement Method (CCM)**. This is the JavaScript reimplementation of the original Python version. It runs entirely in the browser (static site, hosted on Cloudflare Pages); no installation is needed.
 
-## ⬇️ Download
+## ⬇️ Letzte Desktop-Version v1.8.1
 
-**[GroundCurve-win32-x64.zip](https://github.com/onurkoc/ground-curve-JS/releases/download/v1.8.1/GroundCurve-win32-x64.zip)** — Windows x64, no installation required. Extract and run `GroundCurve.exe`.
+**[GroundCurve-win32-x64.zip](https://github.com/onurkoc/ground-curve-JS/releases/download/v1.8.1/GroundCurve-win32-x64.zip)** — last desktop (Electron) release, Windows x64, no installation required. Extract and run `GroundCurve.exe`. The desktop version is no longer developed; new features are only added to the web app.
 
 ---
 
 ## Screenshots
 
 ### Basic Tab — Ground Reaction Curve
-![Basic GRC](docs/screenshots/App_basic.png)
+![Basic GRC](docs/screenshots/web/desktop_basic.png)
 
 ### Enhanced Tab — Full CCM Dashboard
-![Enhanced CCM](docs/screenshots/App_enhanced.png)
+![Enhanced CCM](docs/screenshots/web/desktop_enhanced.png)
 
-### Enhanced Tab — With LSC Yield Element
+### Enhanced Tab — With LSC Yield Element (desktop v1.8.1)
 ![Enhanced with LSC](docs/screenshots/App_enhanced_yield.png)
 
 ---
 
 ## Features
 
-- **Ground Reaction Curve (GRC)** — Mohr-Coulomb elasto-plastic solution (Hoek formulation) with large-strain correction (Vrakas & Anagnostou)
-- **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2005)
-- **Support Characteristic Curve (SCC)** — Thick-walled cylinder shotcrete + rock bolt stiffness
-- **LSC (Lining Stress Controller) support** — Yield gap modelled correctly: zero shotcrete stress until gap is exhausted
-- **Rate-of-Flow stress model** — Time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (P. Schubert 1988)
+- **Ground Reaction Curve (GRC)** — Mohr-Coulomb elasto-plastic solution (Hoek / Duncan-Fama formulation)
+- **Large strain (optional display)** — sidebar checkbox *Large strain (Vrakas & Anagnostou 2015)* overlays the large-strain ground curve in the Basic and Enhanced charts. Display only: equilibrium, FS and LDP are always computed with the small-strain solution.
+- **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2009)
+- **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek)
+- **LSC (Lining Stress Controller) support** — yield gap modelled as an open slot: zero shotcrete stress until the gap is exhausted (see [docs/LSC-Analyse.md](docs/LSC-Analyse.md) for the comparison with Gschwandtner's constant-stress model)
+- **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
 - **Safety factor FS** — at GRC ∩ SCC equilibrium
-- **Print tab** — parameter summary window
+- **Parameter tab** — summary of all 19 input parameters with units
 
 ---
 
@@ -38,38 +39,43 @@ A desktop application for analytical pre-design of tunnel support using the **Co
 
 | Layer | Library |
 |---|---|
-| Desktop shell | Electron 42 |
 | UI framework | Vue 3 + PrimeVue 4 (Aura theme) |
 | Charts | Plotly.js (cartesian bundle) |
-| Build | electron-vite + Vite 5 |
+| Build | Vite 5 (static output in `dist/`) |
+| Tests | Node.js built-in test runner (`node --test`) |
+| Hosting | Cloudflare Pages (see [DEPLOY.md](DEPLOY.md)) |
 | Font | Geist |
 
 ---
 
 ## Installation
 
+Requires Node.js 20 or newer.
+
 ```bash
 npm install
 ```
 
-> On first install, Electron's binary download may need to be triggered manually if the postinstall script fails:
-> ```bash
-> node node_modules/electron/install.js
-> ```
-
 ## Development
 
 ```bash
-npm start
+npm run dev        # Vite dev server with hot reload
 ```
 
-## Package (Windows)
+## Build and preview
 
 ```bash
-npm run package-win
+npm run build      # static site in dist/
+npm run preview    # serve dist/ locally
 ```
 
-Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
+## Tests
+
+```bash
+npm run test
+```
+
+Runs the verification cases against published values (Hoek *Rock-Support Interaction*, RocSupport Verification Manual Problem 5) and the golden regression baseline in `tests/golden/` (regenerate deliberately with `UPDATE_GOLDEN=1 npm run test`).
 
 ---
 
@@ -77,12 +83,14 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 
 | Method | Reference |
 |---|---|
-| CCM (GRC) | Hoek, E. (2007). *Practical Rock Engineering* |
-| Large-strain correction | Vrakas, A. & Anagnostou, G. (2014). *Géotechnique* |
-| LDP | Vlachopoulos, N. & Diederichs, M.S. (2005). *Rock Mechanics and Rock Engineering* |
-| Lining forces | Möller, S.C. & Vermeer, P.A. (2005). Proc. *5th Int. Symp. on Sprayed Concrete* |
-| Shotcrete strength (time) | Aldrian, W. (1991). *Beitrag zum Materialverhalten von früh belastetem Spritzbeton* |
-| Rate-of-Flow / LSC / utilisation | Schubert, P. (1988). *Beitrag zum rheologischen Verhalten vom Spritzbeton, Felsbau 6, Nr.3 pp. 150-153* |
+| CCM (GRC), support curves | Hoek, E. (2007). *Practical Rock Engineering*, chapter "Rock-Support Interaction analysis for tunnels in weak rock masses" |
+| Plastic radius check | Rocscience. *RocSupport Verification Manual*, Problem 5 (Duncan-Fama) |
+| Large-strain correction | Vrakas, A. & Anagnostou, G. (2015). A simple equation for obtaining finite strain solutions from small strain analyses of tunnels with very large convergences. *Géotechnique* 65(11), 936–944 |
+| LDP | Vlachopoulos, N. & Diederichs, M.S. (2009). Improved longitudinal displacement profiles for convergence confinement analysis of deep tunnels. *Rock Mechanics and Rock Engineering* 42(2), 131–146 |
+| Lining forces | Möller, S.C. & Vermeer, P.A. (2005). Prediction of settlements and structural forces in linings due to tunnelling. Proc. 5th Int. Conf. of TC28 of the ISSMGE, Amsterdam |
+| Shotcrete strength and stiffness (time) | Aldrian, W. (1991). *Beitrag zum Materialverhalten von früh belastetem Spritzbeton*. Dissertation |
+| Rate-of-Flow / utilisation | Schubert, P. (1988). Beitrag zum rheologischen Verhalten von Spritzbeton. *Felsbau* 6(3), 150–153; implementation after Entfellner, M. (2024), Dissertation TU Graz, Chp. 6 |
+| LSC (yielding elements) | Gschwandtner, G. G. (2010). Masterarbeit, Montanuniversität Leoben, Kap. V-4.1.5 (Stauchelemente) and V-4.3 |
 
 ---
 
@@ -90,9 +98,9 @@ Output: `release-builds/GroundCurve-win32-x64/GroundCurve.exe`
 
 Used works & special thanks to:
 
-- **Gunter Geschwandtner** — Msc. thesis
-- **Manuel Entfellner** — Msc. & PhD. thesis
-- **Nedim Radoncic** — PhD. thesis
+- **Gunter Gernot Gschwandtner** — MSc thesis
+- **Manuel Entfellner** — MSc & PhD thesis
+- **Nedim Radoncic** — PhD thesis
 
 ---
 

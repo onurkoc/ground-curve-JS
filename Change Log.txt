@@ -1,3 +1,35 @@
+What's new in the web version (branch web, unreleased):
+
+- Platform
+    - Electron removed; GroundCurve is now a static web app (Vite 5, output in
+      dist/) hosted on Cloudflare Pages (see DEPLOY.md)
+    - Removed electron/, electron.vite.config.mjs, printScreen.html, the
+      Electron debug launch config, the package-win script and the
+      electron, electron-vite, @electron/packager and jshint packages
+    - New scripts: npm run dev / build / preview / test
+    - public/_headers (no-cache for HTML, immutable /assets/*) and favicon
+    - v1.8.1 remains the last desktop (Electron) release
+
+- UI
+    - Print tab renamed to "Parameter"; the "Open Parameter Summary" window
+      (window.electronAPI) is gone, the parameter list is unchanged
+    - Optional sidebar checkbox "Large strain (Vrakas & Anagnostou 2015)":
+      overlays the large-strain ground curve in Basic and Enhanced; display
+      only, equilibrium, FS and LDP use the small-strain solution
+
+- Verification (calculation core unchanged)
+    - tests/hoek.test.js: Hoek "Rock-Support Interaction" Fig. 4/6/7/13
+    - tests/rocsupport.test.js: RocSupport Verification Manual Problem 5
+    - tests/golden.test.js: regression baseline in tests/golden/
+    - Documented limitation: no equilibrium found below 10 % of p_max (FS > 10)
+
+- Documentation
+    - README, DEPLOY.md, STATUS.md; LSC analysis vs. Gschwandtner in
+      docs/LSC-Analyse.md
+    - References corrected: Vlachopoulos & Diederichs 2009, Vrakas &
+      Anagnostou 2015, Moeller & Vermeer 2005 (TC28 Amsterdam), Gschwandtner
+      2010 for LSC
+
 What's new in Version 1.8.1:
 
 - Parameters
