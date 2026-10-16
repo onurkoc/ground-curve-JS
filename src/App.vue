@@ -8,7 +8,7 @@
         <TabList>
           <Tab value="basic">Basic</Tab>
           <Tab value="enhanced">Enhanced</Tab>
-          <Tab value="print">Print</Tab>
+          <Tab value="parameter">Parameter</Tab>
         </TabList>
         <TabPanels>
 
@@ -26,15 +26,14 @@
             </div>
           </TabPanel>
 
-          <!-- Print tab: sends current parameters to print screen window -->
-          <TabPanel value="print">
-            <div class="print-panel">
-              <Button label="Open Parameter Summary" @click="openPrintScreen" />
-              <div class="print-param-list">
-                <div v-for="[key, val] in paramEntries" :key="key" class="print-param-row">
-                  <span class="print-param-label">{{ paramLabels[key] ?? key }}</span>
-                  <span class="print-param-value">{{ val }}</span>
-                  <span class="print-param-unit">{{ paramUnits[key] ?? '' }}</span>
+          <!-- Parameter tab: summary of the current input parameters -->
+          <TabPanel value="parameter">
+            <div class="summary-panel">
+              <div class="summary-param-list">
+                <div v-for="[key, val] in paramEntries" :key="key" class="summary-param-row">
+                  <span class="summary-param-label">{{ paramLabels[key] ?? key }}</span>
+                  <span class="summary-param-value">{{ val }}</span>
+                  <span class="summary-param-unit">{{ paramUnits[key] ?? '' }}</span>
                 </div>
               </div>
             </div>
@@ -55,7 +54,6 @@ import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import Button from 'primevue/button'
 import ParameterPanel from './components/ParameterPanel.vue'
 import { updateGraphic } from './physics/groundCurveCalc.js'
 
@@ -86,7 +84,7 @@ const params = reactive({
   l_b:  3
 })
 
-// ── Labels and units for print panel ────────────────────────────────────────
+// ── Labels and units for parameter panel ────────────────────────────────────
 const paramLabels = {
   gamma: 'γ',
   H:     'H',
@@ -132,37 +130,12 @@ onMounted(() => nextTick(() => recalculate()))
 
 // ── Resize chart when switching to a tab that was hidden ─────────────────────
 function onTabChange(tabValue) {
+  // The parameter tab has no chart
+  if (tabValue === 'parameter') return
   nextTick(() => {
     const id = tabValue === 'enhanced' ? 'graph' : 'graphBasic'
     const el = document.getElementById(id)
     if (el) Plotly.Plots.resize(el)
   })
-}
-
-// ── Print screen ─────────────────────────────────────────────────────────────
-function openPrintScreen() {
-  const p = params
-  const valueObject = {
-    gamma:                String(p.gamma),
-    height:               String(p.H),
-    nu:                   String(p.nu),
-    elasticity:           String(p.E),
-    diameter:             String(p.D),
-    cohesion:             String(p.c),
-    friction:             String(p.phi),
-    concStrength:         String(p.f_ck),
-    concElasticity:       String(p.E_c),
-    concNu:               String(p.nu_c),
-    concThickness:        String(p.t_c),
-    distSupport:          String(p.dis_sup),
-    advanceRate:          String(p.advance_rate),
-    pullOutForce:         String(p.t_bf),
-    boltLongitudinalLength: String(p.s_l),
-    boltRadialLength:     String(p.s_r),
-    boltDiamater:         String(p.d_b),
-    boltLength:           String(p.l_b),
-    lscYield:             String(p.l_yield)
-  }
-  window.electronAPI.printScreen(valueObject)
 }
 </script>

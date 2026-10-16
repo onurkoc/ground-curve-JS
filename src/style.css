@@ -141,8 +141,8 @@ html, body, #app {
     padding: 4px 8px 6px;
 }
 
-/* ── Print panel ─────────────────────────────────────────────────────────── */
-.print-panel {
+/* ── Parameter panel ─────────────────────────────────────────────────────── */
+.summary-panel {
     padding: 24px 28px;
     display: flex;
     flex-direction: column;
@@ -153,18 +153,18 @@ html, body, #app {
     overflow-y: auto;
 }
 
-.print-param-list {
+.summary-param-list {
     display: table;
     border-spacing: 0 3px;
     font-size: 0.88rem;
     color: var(--color-text);
 }
 
-.print-param-row {
+.summary-param-row {
     display: table-row;
 }
 
-.print-param-label {
+.summary-param-label {
     display: table-cell;
     padding-right: 12px;
     font-weight: 600;
@@ -173,7 +173,7 @@ html, body, #app {
     min-width: 200px;
 }
 
-.print-param-value {
+.summary-param-value {
     display: table-cell;
     padding-right: 6px;
     color: var(--color-text);
@@ -181,7 +181,7 @@ html, body, #app {
     font-variant-numeric: tabular-nums;
 }
 
-.print-param-unit {
+.summary-param-unit {
     display: table-cell;
     color: var(--color-muted);
     font-size: 0.78rem;
