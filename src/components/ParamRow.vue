@@ -1,6 +1,7 @@
 <template>
-  <div class="param-row">
-    <span class="param-label">{{ label }}</span>
+  <!-- stacked: label too long for the 36 px label column, on its own line above the input -->
+  <div class="param-row" :class="{ 'param-row--stacked': stacked }">
+    <span class="param-label" :title="help">{{ label }}</span>
     <InputNumber
       v-model="val"
       :min="min"
@@ -27,6 +28,7 @@
       @change="$emit('change')"
     />
   </div>
+  <p v-if="help" class="param-help">{{ help }}</p>
 </template>
 
 <script setup>
@@ -43,7 +45,9 @@ const props = defineProps({
   sliderMax:      { type: Number, default: null },
   step:           { type: Number, default: 1 },
   fractionDigits: { type: Number, default: 2 },
-  useGrouping:    { type: Boolean, default: false }
+  useGrouping:    { type: Boolean, default: false },
+  help:           { type: String, default: null },    // short explanation shown under the slider
+  stacked:        { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])

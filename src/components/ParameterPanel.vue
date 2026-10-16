@@ -33,8 +33,10 @@
           <ParamRow v-model="p.t_c"           label="t_c"      unit="m"     :min="0"    :max="1"     :step="0.05" :fractionDigits="2" @change="emit('change')" />
           <ParamRow v-model="p.dis_sup"       label="d_face"   unit="m"     :min="0"    :max="20"    :step="0.1"  :fractionDigits="1" @change="emit('change')" />
           <ParamRow v-model="p.advance_rate"  label="adv."     unit="m/day" :min="0.5"  :max="10"    :step="0.1"  :fractionDigits="1" @change="emit('change')" />
-          <ParamRow v-model="p.l_yield"       label="LSC"      unit="cm"    :min="0"    :max="500"   :step="5"    :fractionDigits="0" @change="emit('change')" />
-          <ParamRow v-model="p.F_LSC"         label="F_LSC"    unit="kN/m"  :min="0"    :max="5000"  :step="50"   :fractionDigits="0" @change="emit('change')" />
+          <ParamRow v-model="p.l_yield"       label="LSC"      unit="cm"    :min="0"    :max="500"   :step="5"    :fractionDigits="0" @change="emit('change')"
+            help="Yield path of the element, tangential (cm)." />
+          <ParamRow v-model="p.F_LSC"         label="LSC force" unit="kN/m" :min="0"    :max="5000"  :step="50"   :fractionDigits="0" stacked @change="emit('change')"
+            help="Ring force carried by the yielding element (kN per m tunnel). 0 = open slot without load (previous behaviour)." />
         </AccordionContent>
       </AccordionPanel>
 

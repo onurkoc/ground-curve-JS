@@ -28,8 +28,9 @@ A web application for analytical pre-design of tunnel support using the **Conver
 - **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2009)
 - **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek)
 - **LSC (Lining Stress Controller) support, single stage** — after Gschwandtner (2010). Inputs:
-  - `LSC` = yield path l_yield [cm], tangential (sum over the ring); radial u_gap = l_yield / 2π
-  - `F_LSC` = ring normal force carried while the element yields [kN per m tunnel], default 0.
+  - `LSC` = yield path of the element l_yield [cm], tangential (sum over the ring); radial u_gap = l_yield / 2π
+  - `LSC force` (F_LSC) = ring force carried by the yielding element [kN per m tunnel], default 0
+    (0 = open slot without load, previous behaviour). Both fields have this help text in the sidebar.
     Support pressure on the plateau p_LSC = F_LSC / r_m with r_m = D/2 − t_c/2 (Anhang D, Gl. 2-10 D)
 
   Shotcrete curve: elastic rise to p_LSC → constant p_LSC over u_gap → elastic rise to p_max,SpC.
