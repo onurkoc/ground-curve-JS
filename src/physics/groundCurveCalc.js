@@ -669,11 +669,14 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         xaxis2: { title: { text: 'Time [days]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.2f', domain: [0.55, 1], anchor: 'y4' },
         yaxis: { tickformat: '.1f', title: { text: 'Support Pressure [MPa]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', range: [0, maxY], domain: [0.55, 1], rangemode: 'nonnegative' },
         yaxis2: { title: { text: 'Distance from Tunnel Face [m]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: 'd', range: [80, -25], domain: [0, 0.50], anchor: 'x1' },
-        yaxis3: { title: { text: 'Utilisation μ_SpC [%]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.1f', range: [0, muRangeMax], domain: [0.55, 1], anchor: 'x2' },
+        yaxis3: { title: { text: 'Utilisation μ_SpC [%]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.0f', range: [0, muRangeMax], domain: [0.55, 1], anchor: 'x2' },
         yaxis4: { title: { text: 'Stress SpC [MPa]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.2f', domain: [0, 0.50], anchor: 'x2', rangemode: 'nonnegative' },
         legend: { traceorder: 'normal', font: { family: 'arial', size: 16, color: '#000' }, bgcolor: '#E2E2E2', bordercolor: '#FFFFFF', borderwidth: 1.5 },
         shapes: verticalLines
     }
+    // With a loaded LSC the support curve (FS) and the time plots (σ, μ_SpC) use different shell
+    // stiffness, so the start and end of the yield path need not coincide
+    const lscNote = obj.lsc.p_LSC > 0 && obj.lsc.u_gap > 0
 
     const layoutBasic = {
         title: { text: 'Ground Reaction Curve', font: { size: 18 } }, plot_bgcolor: '#f9f7f7', showlegend: true,
@@ -703,6 +706,16 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         for (const axis of ['xaxis', 'xaxis2', 'yaxis', 'yaxis2', 'yaxis3', 'yaxis4']) {
             layout[axis].title.font = { ...layout[axis].title.font, size: 11 }
         }
+    }
+    // Enhanced, loaded LSC: note under the title, the top margin grows by the note's lines
+    if (lscNote) {
+        const lines = options.legendBelow
+            ? ['FS from 28-day elastic support curve;', 'σ(t) and μ_SpC from rate-of-flow method –',
+                'yield path start/end can differ between both.']
+            : ['FS from 28-day elastic support curve; σ(t) and μ_SpC from rate-of-flow method –',
+                'yield path start/end can differ between both.']
+        layout.title.subtitle = { text: lines.join('<br>'), font: { family: 'Arial, sans-serif', size: 11, color: '#444' } }
+        layout.margin = { ...layout.margin, t: layout.margin.t + 16 * lines.length + (options.legendBelow ? 20 : 8) }
     }
 
     // Phone layout: no mode bar, so it cannot cover the chart title
