@@ -50,6 +50,12 @@
       </AccordionPanel>
 
     </Accordion>
+
+    <!-- Display option: large-strain ground curve (no effect on equilibrium, FS or LDP) -->
+    <label class="sidebar-option">
+      <Checkbox v-model="largeStrain" binary />
+      <span>Large strain (Vrakas &amp; Anagnostou 2015)</span>
+    </label>
   </div>
 </template>
 
@@ -58,10 +64,12 @@ import Accordion from 'primevue/accordion'
 import AccordionPanel from 'primevue/accordionpanel'
 import AccordionHeader from 'primevue/accordionheader'
 import AccordionContent from 'primevue/accordioncontent'
+import Checkbox from 'primevue/checkbox'
 import ParamRow from './ParamRow.vue'
 
 const props = defineProps({ params: Object })
 const emit = defineEmits(['update:params', 'change'])
+const largeStrain = defineModel('largeStrain', { type: Boolean, default: false })
 
 // Two-way binding: p proxies each param field
 import { computed } from 'vue'

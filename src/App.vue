@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout">
 
-    <ParameterPanel :params="params" @change="recalculate" />
+    <ParameterPanel :params="params" v-model:largeStrain="showLargeStrain" @change="recalculate" />
 
     <div class="chart-area">
       <Tabs value="basic" class="chart-tabs" @update:value="onTabChange">
@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import Plotly from 'plotly.js-cartesian-dist'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
@@ -115,6 +115,9 @@ const paramUnits = {
 }
 const paramEntries = computed(() => Object.entries(params))
 
+// Display only: overlay the large-strain ground curve (Vrakas & Anagnostou 2015)
+const showLargeStrain = ref(false)
+
 // ── Recalculate and render ───────────────────────────────────────────────────
 function recalculate() {
   const p = params
@@ -122,11 +125,13 @@ function recalculate() {
     p.gamma, p.H, p.nu, p.E, p.D, p.c, p.phi,
     p.f_ck, p.E_c, p.nu_c, p.t_c,
     p.dis_sup, p.advance_rate,
-    p.t_bf, p.s_l, p.s_r, p.d_b, p.l_b, p.l_yield
+    p.t_bf, p.s_l, p.s_r, p.d_b, p.l_b, p.l_yield,
+    { showLargeStrain: showLargeStrain.value }
   )
 }
 
 onMounted(() => nextTick(() => recalculate()))
+watch(showLargeStrain, recalculate)
 
 // ── Resize chart when switching to a tab that was hidden ─────────────────────
 function onTabChange(tabValue) {

@@ -338,8 +338,10 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
 // ─── Build Plotly traces and render ──────────────────────────────────────────
 
+// options.showLargeStrain: also plot the large-strain ground curve. Display only — equilibrium,
+// FS and LDP always use the small-strain solution.
 export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
-    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield) {
+    dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield, options = {}) {
 
     const data_array = groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         dis_sup, advance_rate, t_bf, s_l, s_r, d_b, l_b, l_yield)
@@ -354,9 +356,11 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     }
     const trace1_1 = {
         x: obj.groundCurveLargeStrain.x, y: obj.groundCurveLargeStrain.y,
-        mode: 'lines', type: 'scatter', name: 'Ground Curve LS**',
-        line: { color: 'darkturquoise', dash: 'dashdot', opacity: 0.7 },
-        xaxis: 'x1', yaxis: 'y1', hoverinfo: 'none'
+        mode: 'lines', type: 'scatter',
+        name: 'Ground Curve LS (Vrakas & Anagnostou 2015)<br>' +
+            '<span style="font-size:12px">nur Darstellung, Bemessungswerte nach Kleinverformungslösung</span>',
+        line: { color: 'darkturquoise', dash: 'dashdot' }, opacity: 0.7,
+        xaxis: 'x1', yaxis: 'y1', hoverinfo: 'x+y'
     }
     const trace2 = {
         x: obj.supportCurve.x, y: obj.supportCurve.y,
@@ -393,6 +397,10 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
     const data = [trace1, trace2, trace3, trace3_1]
     const dataBasic = [trace1, trace2, trace3, trace3_1, trace3_2, trace3_4]
+    if (options.showLargeStrain) {
+        data.splice(1, 0, trace1_1)
+        dataBasic.splice(1, 0, trace1_1)
+    }
 
     let verticalLines = []
     if (Object.keys(obj).includes('LDP')) {
