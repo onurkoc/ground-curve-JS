@@ -5,15 +5,13 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 19 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 20 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
   - Gschwandtner Anhang B (LSC): p_LSC 0,1106 MPa, Δu 11,14 mm, p_max 0,6725 MPa.
-  - Golden Values unter `tests/golden/`: Standard und Vortrieb 0,5 m/d unverändert seit Einführung (ohne LSC);
-    `lsc` (Anker + 20 cm offener Schlitz) seit „Anker unabhängig vom Stauchweg" geändert;
-    Regressionsstand für F_LSC > 0 (`lscForce600`, `lscForce2400Plateau`, `lscLongPlateau`) –
-    Werte aus der App selbst, keine Quellenwerte.
+  - Golden Values unter `tests/golden/`: alle sechs Sets mit der u_im(p_i)-Korrektur neu erzeugt
+    (nur LDP, σ(t), μ_SpC, `lsc.yieldRateOfFlow` geändert); Werte aus der App selbst, keine Quellenwerte.
 - Parameter-Tab, optionale Large-strain-Kurve (nur Darstellung), `public/_headers`, Favicon.
 - Handy-Layout (≤ 768 px): Seitenleiste einklappbar, Diagramm volle Breite, Legende unter dem Diagramm,
   keine Plotly-Werkzeugleiste, Enhanced-Tab mit vier untereinander liegenden Diagrammen (scrollbar).
@@ -36,6 +34,18 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
   - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px).
 - Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
   (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
+- **Fehler korrigiert: LDP unter Stützdruck, Zeitreihe endete vor u_eq.**
+  - Fehler: u_im(p_i) der LDPs für die Zeitzuordnung (`u_im_updated`, `u_im_inc`) hatte den zweiten Term
+    −(1 − 2ν)·p_o (nur für p_i = 0 gültig). Die LDP lag um r_o(1 + ν)(1 − 2ν)·p_i / E unter der
+    Gebirgskennlinie; `ldpInverse()` gab für die letzten Schritte null zurück, die Zeitreihe endete
+    0,18 mm (Standard) bis 0,59 mm vor u_eq. Folge: Phase 3 der LSC-Zeitreihe wurde bei F_LSC 600 kN/m,
+    LSC 20 cm nicht erreicht.
+  - Korrektur: Hoek, *Rock-Support Interaction*, Gl. (7) (S. 4): −(1 − 2ν)(p_o − p_i). Zeitreihe bis
+    |u − u_eq| < 0,01 mm (Schlusspunkt bei u_eq − 0,005 mm), höchstens x = 100 m; letzter Punkt bei der
+    Unterabtastung immer erhalten. u_im bei p_i = 0 (Gebirgskennlinie, Original-LDP) unverändert.
+  - Bitgleich geblieben: FS, u_eq, p_eq, Gebirgs- und Ausbaukennlinie, Hoek- und RocSupport-Prüfgrößen.
+  - Desktop v1.8.1 (Tag `v1.8.1`, Commit 50780c8) hat denselben Fehler
+    (`src/physics/groundCurveCalc.js` Z. 240–241 und 251–252).
 
 ## Zu prüfen: von Onur gegen Aldrian/Entfellner zu prüfen
 
@@ -63,28 +73,23 @@ Commit 799116f ohne ausdrücklichen Auftrag.
 2. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
 3. **Prüfung auf echtem Handy** (bisher nur Browser-Emulator 390 × 844).
-4. **Zeitreihe σ(t)/μ_SpC endet vor u_eq** (alle Fälle, auch ohne LSC). Ursache in `groundCurve()`:
-   `ldpInverse()` (Z. 21) gibt null zurück, sobald u ≥ u_im(p_inc); diese Schritte fallen in Z. 354–357 weg.
-   u_im(p_inc) (Z. 344) nutzt (1 − 2ν)·p_o statt (1 − 2ν)·(p_o − p_inc) und liegt damit um
-   r_o(1 + ν)(1 − 2ν)·p_inc / E unter der Gebirgskennlinie. Der Bereich x = −25 … 80 m (Z. 325) gilt nur für die
-   grauen LDP-Kurven; die Zeitreihe nutzt x aus `ldpInverse()` ohne Grenze.
+4. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
 
-   | Fall | u_eq [m] | u Ende Zeitreihe [m] | Differenz [mm] | x Ende [m] | t Ende [d] | LDP(p_eq) bei x 80 m [m] |
-   |---|---|---|---|---|---|---|
-   | (a) Standard ohne LSC | 0,06689 | 0,06672 | 0,18 | 30,05 | 14,03 | 0,06437 |
-   | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 | 0,59 | 30,43 | 14,22 | 0,09601 |
-   | (c) Fall C | 0,08772 | 0,08714 | 0,58 | 35,45 | 16,72 | 0,08636 |
+   Ende der Zeitreihe vor/nach der Korrektur:
 
-   Folge (b): Stauchende nach Fließratenmethode 0,09649 m liegt hinter dem Ende der Zeitreihe; Phase 3
-   wird nicht erreicht. Test „after the yield path …" in `tests/lsc.test.js` steht deshalb auf `todo`.
+   | Fall | u_eq [m] | Ende alt u [m] / t [d] | Ende neu u [m] / t [d] |
+   |---|---|---|---|
+   | (a) Standard ohne LSC | 0,06689 | 0,06672 / 14,03 | 0,06689 / 13,74 |
+   | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 / 14,22 | 0,09699 / 17,23 |
+   | (c) Fall C | 0,08772 | 0,08714 / 16,72 | 0,08771 / 15,70 |
 
 Weitere Hinweise:
 
 - Fall C (App-Standard mit Ankern, LSC 20 cm, F_LSC 2400 kN/m, σ_N 12 MPa): u 0,08772 m, p 0,6987 MPa,
-  FS 2,212, FS (shotcrete) 2,377, Anker 100 %. Stauchbeginn 28-Tage-Kennlinie u 0,06542 m / t 0,120 d,
-  Fließratenmethode u 0,06576 m / t 0,149 d; Stauchende 0,09725 bzw. 0,09759 m, in beiden nicht erreicht
-  (Gleichgewicht im Plateau). μ_SpC > 100 % von 0,011 bis 0,60 d, Maximum 371 % bei 0,148 d,
-  Minimum 41,0 % bei 16,72 d. Kein Spannungssprung mehr am Stauchbeginn.
+  FS 2,212, FS (shotcrete) 2,377, Anker 100 %. Stauchbeginn 28-Tage-Kennlinie u 0,06542 m / t 0,119 d,
+  Fließratenmethode u 0,06577 m / t 0,147 d; Stauchende 0,09725 bzw. 0,09759 m, in beiden nicht erreicht
+  (Gleichgewicht im Plateau). μ_SpC > 100 % von 0,011 bis 0,59 d, Maximum 375 % bei 0,145 d,
+  Minimum 41,2 % bei 15,70 d (Ende der Zeitreihe, u 0,08771 m). Kein Spannungssprung am Stauchbeginn.
 - Anker (App-Standard: T_bf 250 kN, s_l 2 m, s_r 1,5 m, d_b 0,034 m, l_b 3 m) erreichen p_max,bolt
   0,0833 MPa nach Δu = p_bmax_el / k_b_el = 0,0833 / 20,88 = 3,99 mm (nicht 0,2 mm).
 - Ungenutzte Abhängigkeiten `regression`, `@turf/helpers`, `@turf/line-intersect`.

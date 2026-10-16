@@ -328,34 +328,63 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
         const r_pl_sup = r_o * (2 * (p_o * (k - 1) + sigma_cm) / (1 + k) /
             ((k - 1) * Math.max(...p_point) + sigma_cm)) ** (1 / (k - 1))
+        // The time series is mapped up to |u − u_eq| < U_TOL (0.01 mm), at most X_MAX behind the face
+        const U_TOL = 1e-5, X_MAX = 100
 
-        // Equilibrium LDP — used for distance-from-face mapping (guarantees monotone time axis)
+        // Equilibrium LDP — used for distance-from-face mapping (guarantees monotone time axis).
+        // Final displacement under the support pressure p_i: Hoek, Rock-Support Interaction, Gl. (7)
+        // (references/, S. 4), second term −(1 − 2ν)(p_o − p_i). With −(1 − 2ν)·p_o (p_i = 0 only) the
+        // LDP stayed below the ground curve and never reached u_eq.
+        const p_sup = Math.max(...p_point)
         const u_im_updated = r_o * (1 + nu) / E *
-            (2 * (1 - nu) * (p_o - p_cr) * (r_pl_sup / r_o) ** 2 - (1 - 2 * nu) * p_o)
+            (2 * (1 - nu) * (p_o - p_cr) * (r_pl_sup / r_o) ** 2 - (1 - 2 * nu) * (p_o - p_sup))
         const u_if_updated = (u_im_updated / 3) * Math.exp(-0.15 * (r_pl_sup / r_o))
 
         const zip = (...rows) => [...rows[0]].map((_, c) => rows.map(row => row[c]))
         const zippedArray = zip(p_scl, p_point)
 
+        // LDP for the support pressure p_inc: Hoek Gl. (7) with −(1 − 2ν)(p_o − p_inc), see above
+        const ldpFor = p_inc => {
+            const r_pl = r_o * (2 * (p_o * (k - 1) + sigma_cm) /
+                (1 + k) / ((k - 1) * p_inc + sigma_cm)) ** (1 / (k - 1))
+            const u_im_p = r_o * (1 + nu) / E * (2 * (1 - nu) * (p_o - p_cr) *
+                (r_pl / r_o) ** 2 - (1 - 2 * nu) * (p_o - p_inc))
+            return { r_pl, u_im_p, u_if_p: (u_im_p / 3) * Math.exp(-0.15 * (r_pl / r_o)) }
+        }
+        const pushMapped = (u, x_at) => {
+            if (x_at !== null && x_at <= X_MAX && (p_y_l.length === 0 || x_at > p_y_l[p_y_l.length - 1])) {
+                p_x_l.push(u); p_y_l.push(x_at)
+            }
+        }
+
         zippedArray.forEach(item => {
             const [p_scl_inc, p_inc] = item
-            const r_pl_sup_inc = r_o * (2 * (p_o * (k - 1) + sigma_cm) /
-                (1 + k) / ((k - 1) * p_inc + sigma_cm)) ** (1 / (k - 1))
-            const u_im_inc = r_o * (1 + nu) / E * (2 * (1 - nu) * (p_o - p_cr) *
-                (r_pl_sup_inc / r_o) ** 2 - (1 - 2 * nu) * p_o)
-            const u_if_inc = (u_im_inc / 3) * Math.exp(-0.15 * (r_pl_sup_inc / r_o))
+            const { r_pl: r_pl_sup_inc, u_im_p: u_im_inc, u_if_p: u_if_inc } = ldpFor(p_inc)
             const u_ix_a_inc = x_updated.map(item => u_if_inc * Math.exp(item / r_o))
             const u_ix_b_inc = x_updated.map(item =>
                 u_im_inc * (1 - (1 - u_if_inc / u_im_inc) * Math.exp((-3 * item / r_o) / (2 * r_pl_sup_inc / r_o))))
             const u_ix_inc = x_updated.map((item, index) => item < 0 ? u_ix_a_inc[index] : u_ix_b_inc[index])
             p_point_x.push(u_ix_inc)
 
-            // Use per-step LDP for distance; ensure monotone by only pushing if x_at_scl > last pushed
-            const x_at_scl = ldpInverse(p_scl_inc, u_im_inc, u_if_inc, r_pl_sup_inc, r_o)
-            if (x_at_scl !== null && (p_y_l.length === 0 || x_at_scl > p_y_l[p_y_l.length - 1])) {
-                p_x_l.push(p_scl_inc); p_y_l.push(x_at_scl)
-            }
+            // Use per-step LDP for distance; ensure monotone by only pushing if x_at_scl > last pushed.
+            // Steps within U_TOL of u_eq are left to the closing point below (x grows without bound there).
+            if (p_scl_inc > intersection.x - U_TOL) return
+            pushMapped(p_scl_inc, ldpInverse(p_scl_inc, u_im_inc, u_if_inc, r_pl_sup_inc, r_o))
         })
+        // Closing point: |u − u_eq| = U_TOL / 2 on the LDP of the last pressure step; if that lies beyond
+        // X_MAX, the series ends at X_MAX
+        if (p_point.length > 0) {
+            const last = ldpFor(p_point[p_point.length - 1])
+            const u_close = intersection.x - U_TOL / 2
+            const x_close = ldpInverse(u_close, last.u_im_p, last.u_if_p, last.r_pl, r_o)
+            if (x_close !== null && x_close <= X_MAX) {
+                pushMapped(u_close, x_close)
+            } else if (p_y_l.length === 0 || X_MAX > p_y_l[p_y_l.length - 1]) {
+                const u_xmax = last.u_im_p * (1 - (1 - last.u_if_p / last.u_im_p) *
+                    Math.exp((-3 * X_MAX / r_o) / (2 * last.r_pl / r_o)))
+                if (p_x_l.length === 0 || u_xmax > p_x_l[p_x_l.length - 1]) pushMapped(u_xmax, X_MAX)
+            }
+        }
         const u_ix_a_updated = x_updated.map(item => u_if_updated * Math.exp(item / r_o))
         const u_ix_b_updated = x_updated.map(item =>
             u_im_updated * (1 - (1 - u_if_updated / u_im_updated) * Math.exp((-3 * item / r_o) / (2 * r_pl_sup / r_o))))
@@ -369,8 +398,10 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         const t_span = p_y_l.length > 1 ? (p_y_l[p_y_l.length - 1] - p_y_l[0]) / advance_rate : 1
         const n_target = Math.max(50, Math.ceil(t_span * 24))
         const stride = Math.max(1, Math.floor(p_x_l.length / n_target))
-        const p_x_l_ss = p_x_l.filter((_, i) => i % stride === 0)
-        const p_y_l_ss = p_y_l.filter((_, i) => i % stride === 0)
+        // the last point (end of the series at u_eq) is always kept
+        const keep = (_, i) => i % stride === 0 || i === p_x_l.length - 1
+        const p_x_l_ss = p_x_l.filter(keep)
+        const p_y_l_ss = p_y_l.filter(keep)
 
         data_object.LDP = LDP
         if (lscCurves && p_LSC > 0) {

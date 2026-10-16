@@ -17,6 +17,21 @@ What's new in the web version (branch web, unreleased):
       overlays the large-strain ground curve in Basic and Enhanced; display
       only, equilibrium, FS and LDP use the small-strain solution
 
+- Physics fix: LDP under support pressure (groundCurveCalc.js)
+    - Error: the final wall displacement u_im(p_i) of the LDPs used for the
+      time mapping (u_im_updated, u_im_inc) had the second term
+      -(1 - 2 nu) * p_o, which is only valid for p_i = 0. Hoek "Rock-Support
+      Interaction" eq. (7) gives -(1 - 2 nu) * (p_o - p_i). The LDP stayed
+      below the ground curve, so the sigma(t) / mu_SpC series ended 0.2-0.6 mm
+      before u_eq (default case: 0.18 mm, 14.0 d instead of reaching u_eq)
+    - Fix: eq. (7) with p_i; the series is mapped up to |u - u_eq| < 0.01 mm
+      (at most 100 m behind the face); the last point is kept when subsampling
+    - Unchanged: FS, u_eq, p_eq, ground and support curves, u_im at p_i = 0
+    - Changed: LDP (red and grey curves), sigma(t), mu_SpC; golden values of
+      all six sets regenerated
+    - Also present in desktop v1.8.1 (tag v1.8.1, commit 50780c8,
+      src/physics/groundCurveCalc.js lines 240-241 and 251-252)
+
 - Verification (calculation core unchanged)
     - tests/hoek.test.js: Hoek "Rock-Support Interaction" Fig. 4/6/7/13
     - tests/rocsupport.test.js: RocSupport Verification Manual Problem 5
