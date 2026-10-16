@@ -91,12 +91,18 @@ function findSegmentIntersection(firstCurve, secondCurve) {
 
 // ─── Rate of flow (creep / shrinkage / thermal) ──────────────────────────────
 
-function rateOfFlow(dispObj, rate, E_c, t0Days = 0) {
+// sigma0: shell stress at the start of the series [MPa] (e.g. the LSC load carried before)
+// tLoadDays: time since the start of loading at the start of the series [days]; creep, thermal
+//   and shrinkage terms are counted from the start of loading
+function rateOfFlow(dispObj, rate, E_c, t0Days = 0, sigma0 = 0, tLoadDays = 0) {
     const wall_disp = dispObj.x, dist_to_face = dispObj.y
     const arr_disp = wall_disp.map(item => item - wall_disp[0])
     const arr_dist_to_scl = dist_to_face.map(item => item - dist_to_face[0])
     const arr_days = arr_dist_to_scl.map(item => item / rate)
     const arr_hours = arr_days.map(item => item * 24)
+    // time since the start of loading (equal to arr_days unless tLoadDays > 0)
+    const load_days = tLoadDays > 0 ? arr_days.map(item => item + tLoadDays) : arr_days
+    const load_hours = tLoadDays > 0 ? load_days.map(item => item * 24) : arr_hours
     const del_eps = []
     arr_disp.slice(1).forEach((item, index) => del_eps.push(item - arr_disp.slice(0, -1)[index]))
 
@@ -104,20 +110,20 @@ function rateOfFlow(dispObj, rate, E_c, t0Days = 0) {
     const eps_sh_inf = 0.001250, C_d_inf = 0.000090, Q = 0.000100
 
     // Eq. 6.14: C(t) = A * t_hours^0.25 (t measured from initial loading, in hours)
-    const C_t = arr_hours.map(item => A * item ** 0.25)
-    const theta = arr_days.map(item => item ** 0.25 * 250)
+    const C_t = load_hours.map(item => A * item ** 0.25)
+    const theta = load_days.map(item => item ** 0.25 * 250)
     const eps_t = theta.map(item => (-1 * Math.cos(Math.PI / 180 * item) + 1) * 30 / 1000000)
     // Gl. V-41 (Aldrian): E_SpC(t) = E_SpC(28d) * sqrt(t_hours / (4.2 + 0.85*t_hours)),
     // true concrete age in hours. Pairs with the Aldrian strength curve (Gl. V-42) used
     // for the target/capacity curve below.
     const t_real_hours = arr_hours.map(h => t0Days * 24 + h)
     const E_t = t_real_hours.map(h => E_c * Math.sqrt(h / (4.2 + 0.85 * h)))
-    const eps_sh = arr_days.map(item => eps_sh_inf * item / (item + B))
+    const eps_sh = load_days.map(item => eps_sh_inf * item / (item + B))
 
-    const sigma_2 = [0], eps_d = [0]
+    const sigma_2 = [sigma0], eps_d = [0]
     for (let index = 0; index < arr_days.length; index++) {
         if (index === arr_days.length - 1) break
-        if (index === 0) { eps_d.push(0); sigma_2.push(0) }
+        if (index === 0) { eps_d.push(0); sigma_2.push(sigma0) }
         else {
             const del_eps_sh = eps_sh[index] - eps_sh[index - 1]
             const del_eps_t = eps_t[index] - eps_t[index - 1]
@@ -364,26 +370,51 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         const p_x_l_ss = p_x_l.filter((_, i) => i % stride === 0)
         const p_y_l_ss = p_y_l.filter((_, i) => i % stride === 0)
 
-        // Skip yield phase for rateOfFlow: during LSC yielding the shotcrete is free,
-        // so shrinkage/thermal terms must not generate tensile stress.
-        // Start rateOfFlow only from the point where the gap is exhausted.
-        let gapEndIdx = 0, t_gap_days = 0
-        if (u_gap > 0 && p_x_l_ss.length > 0) {
-            const found = p_x_l_ss.findIndex(u => u >= u_io + u_gap)
-            if (found > 0) {
-                gapEndIdx = found
-                t_gap_days = (p_y_l_ss[found] - p_y_l_ss[0]) / advance_rate
-            }
-        }
-        const p_x_l_rof = p_x_l_ss.slice(gapEndIdx)
-        const p_y_l_rof = p_y_l_ss.slice(gapEndIdx)
-
-        // Remove residual LSC gap from wall displacement (post-gap, full u_gap consumed)
-        const p_x_l_spc = p_x_l_rof.map(u => u - Math.min(Math.max(u - u_io, 0), u_gap))
-        const arrROF = rateOfFlow({ x: p_x_l_spc, y: p_y_l_rof }, advance_rate, E_c, t_gap_days)
         data_object.LDP = LDP
-        // Offset actualStress time by t_gap_days so concrete age is correct for utilisation
-        data_object.actualStress = { x: arrROF[1].map(item => t_gap_days + item / 24), y: arrROF[0] }
+        if (lscCurves && p_LSC > 0) {
+            // LSC with load (Gschwandtner S. 56): from u_io to the end of the yield path the shell
+            // carries the constant stress σ_N = F_LSC / t_c, so there is no shrinkage/thermal
+            // stress without load. Rate of flow starts from σ_N once the yield path is used up.
+            const sigma_N = F_LSC / 1000 / t_c                    // kN/m / m -> MPa
+            const t_of = i => (p_y_l_ss[i] - p_y_l_ss[0]) / advance_rate
+            let endIdx = p_x_l_ss.findIndex(u => u >= lscCurves.yieldEnd)
+            if (endIdx < 0) endIdx = p_x_l_ss.length              // equilibrium on the plateau
+            const stressX = [], stressY = []
+            for (let i = 0; i < endIdx; i++) { stressX.push(t_of(i)); stressY.push(sigma_N) }
+            if (endIdx < p_x_l_ss.length) {
+                const t_gap_days = t_of(endIdx)
+                // Remove the yield path from the wall displacement: only the rest strains the shell
+                const u_spc = p_x_l_ss.slice(endIdx).map(u =>
+                    u - Math.min(Math.max(u - lscCurves.yieldStart, 0), u_gap))
+                // The shell has been loaded since u_io: creep, shrinkage and thermal terms count
+                // from there, not from the end of the yield path
+                const rof = rateOfFlow({ x: u_spc, y: p_y_l_ss.slice(endIdx) }, advance_rate, E_c,
+                    t_gap_days, sigma_N, t_gap_days)
+                rof[1].forEach((h, i) => { stressX.push(t_gap_days + h / 24); stressY.push(rof[0][i]) })
+            }
+            data_object.actualStress = { x: stressX, y: stressY }
+        } else {
+            // Skip yield phase for rateOfFlow: during LSC yielding the shotcrete is free,
+            // so shrinkage/thermal terms must not generate tensile stress.
+            // Start rateOfFlow only from the point where the gap is exhausted.
+            let gapEndIdx = 0, t_gap_days = 0
+            if (u_gap > 0 && p_x_l_ss.length > 0) {
+                const found = p_x_l_ss.findIndex(u => u >= u_io + u_gap)
+                if (found > 0) {
+                    gapEndIdx = found
+                    t_gap_days = (p_y_l_ss[found] - p_y_l_ss[0]) / advance_rate
+                }
+            }
+            const p_x_l_rof = p_x_l_ss.slice(gapEndIdx)
+            const p_y_l_rof = p_y_l_ss.slice(gapEndIdx)
+
+            // Remove residual LSC gap from wall displacement (post-gap, full u_gap consumed)
+            const p_x_l_spc = p_x_l_rof.map(u => u - Math.min(Math.max(u - u_io, 0), u_gap))
+            const arrROF = rateOfFlow({ x: p_x_l_spc, y: p_y_l_rof }, advance_rate, E_c, t_gap_days)
+            // Offset actualStress time by t_gap_days so concrete age is correct for utilisation
+            data_object.actualStress = { x: arrROF[1].map(item => t_gap_days + item / 24), y: arrROF[0] }
+        }
+        const stressActual = data_object.actualStress.y
 
         // Utilisation μ_SpC(t) = σ_actual(t) / σ_capacity(t) × 100%
         const muY = data_object.actualStress.x.map((t, i) => {
@@ -391,7 +422,7 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
             if (idx <= 0) return 0
             const cap = sigma[idx - 1] + (sigma[idx] - sigma[idx - 1]) *
                 (t - time_28days[idx - 1]) / (time_28days[idx] - time_28days[idx - 1])
-            return cap > 0 ? Math.min(arrROF[0][i] / cap * 100, 100) : 0
+            return cap > 0 ? Math.min(stressActual[i] / cap * 100, 100) : 0
         })
         data_object.utilisationSpC = { x: data_object.actualStress.x, y: muY }
     } else {

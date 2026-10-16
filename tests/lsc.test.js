@@ -79,6 +79,24 @@ test('Bolts act independently of the LSC yield path', () => {
     assert.ok(obj.lsc.boltUtilisation > 0 && obj.lsc.boltUtilisation <= 1)
 })
 
+// Gschwandtner S. 56: while the element yields the shell is loaded constantly with
+// σ_N = F_LSC / t_c; no shrinkage/thermal tension without load.
+test('Rate of flow: constant σ_N = F_LSC / t_c during the yield path', () => {
+    // Equilibrium on the plateau: the whole history is the yield phase
+    const plateau = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 2400 }).obj
+    const sigma_N = 2400 / 1000 / DEFAULTS.t_c
+    assert.ok(plateau.actualStress.y.every(s => Math.abs(s - sigma_N) < 1e-12))
+
+    // Yield path used up before equilibrium: σ_N up to the end of the yield path, then rate of flow
+    // continues from σ_N (the shell is loaded further, no drop back towards 0)
+    const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 600 })
+    const s = obj.actualStress.y
+    const n = s.findIndex(v => Math.abs(v - 600 / 1000 / DEFAULTS.t_c) > 1e-12)
+    assert.ok(n > 0 && n < s.length)
+    assert.ok(s[n] >= s[n - 1], `drop at end of yield path: ${s[n - 1]} -> ${s[n]}`)
+    assert.ok(s.every(v => v > 0))
+})
+
 test('Shotcrete capacity decides whether the LSC yields (bolts not included)', () => {
     // p_LSC between p_max,SpC (1.4625 MPa) and p_max,SpC + p_max,bolt (1.5458 MPa): never yields
     const r_m = DEFAULTS.D / 2 - DEFAULTS.t_c / 2
