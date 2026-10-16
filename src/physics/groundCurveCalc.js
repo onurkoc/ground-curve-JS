@@ -372,15 +372,25 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
         data_object.LDP = LDP
         if (lscCurves && p_LSC > 0) {
-            // LSC with load (Gschwandtner S. 56): from u_io to the end of the yield path the shell
-            // carries the constant stress σ_N = F_LSC / t_c, so there is no shrinkage/thermal
-            // stress without load. Rate of flow starts from σ_N once the yield path is used up.
+            // LSC with load (Gschwandtner S. 56), three phases:
+            //   u_io … u_lsc = u_io + p_LSC/K_SpC: elastic rise of the shell, rate of flow from 0
+            //     as without LSC; the element limits the stress to σ_N = F_LSC / t_c
+            //   u_lsc … end of the yield path: constant σ_N
+            //   after the yield path: rate of flow continues from σ_N
             const sigma_N = F_LSC / 1000 / t_c                    // kN/m / m -> MPa
             const t_of = i => (p_y_l_ss[i] - p_y_l_ss[0]) / advance_rate
             let endIdx = p_x_l_ss.findIndex(u => u >= lscCurves.yieldEnd)
             if (endIdx < 0) endIdx = p_x_l_ss.length              // equilibrium on the plateau
+            let lscIdx = p_x_l_ss.findIndex(u => u >= lscCurves.yieldStart)
+            if (lscIdx < 0) lscIdx = p_x_l_ss.length              // equilibrium before the plateau
+            lscIdx = Math.min(lscIdx, endIdx)
             const stressX = [], stressY = []
-            for (let i = 0; i < endIdx; i++) { stressX.push(t_of(i)); stressY.push(sigma_N) }
+            if (lscIdx > 0) {
+                const rise = rateOfFlow({ x: p_x_l_ss.slice(0, lscIdx), y: p_y_l_ss.slice(0, lscIdx) },
+                    advance_rate, E_c)
+                rise[0].forEach((s, i) => { stressX.push(t_of(i)); stressY.push(Math.min(s, sigma_N)) })
+            }
+            for (let i = lscIdx; i < endIdx; i++) { stressX.push(t_of(i)); stressY.push(sigma_N) }
             if (endIdx < p_x_l_ss.length) {
                 const t_gap_days = t_of(endIdx)
                 // Remove the yield path from the wall displacement: only the rest strains the shell

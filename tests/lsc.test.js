@@ -79,22 +79,31 @@ test('Bolts act independently of the LSC yield path', () => {
     assert.ok(obj.lsc.boltUtilisation > 0 && obj.lsc.boltUtilisation <= 1)
 })
 
-// Gschwandtner S. 56: while the element yields the shell is loaded constantly with
-// σ_N = F_LSC / t_c; no shrinkage/thermal tension without load.
-test('Rate of flow: constant σ_N = F_LSC / t_c during the yield path', () => {
-    // Equilibrium on the plateau: the whole history is the yield phase
+// Gschwandtner S. 56: the shell rises elastically until the element yields (u_lsc = u_io + p_LSC/K),
+// then carries the constant stress σ_N = F_LSC / t_c while the element yields.
+test('Rate of flow: rise to u_lsc, constant σ_N = F_LSC / t_c during the yield path', () => {
+    // Equilibrium on the plateau: rise from 0 (rate of flow, limited to σ_N), then σ_N to the end
     const plateau = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 2400 }).obj
     const sigma_N = 2400 / 1000 / DEFAULTS.t_c
-    assert.ok(plateau.actualStress.y.every(s => Math.abs(s - sigma_N) < 1e-12))
+    const p = plateau.actualStress.y
+    const k = p.findIndex(v => Math.abs(v - sigma_N) < 1e-12)
+    assert.ok(k > 1, 'elastic rise before the yield path')
+    assert.equal(p[0], 0)
+    p.slice(0, k).forEach((v, i) => assert.ok(v < sigma_N && (i === 0 || v >= p[i - 1]), `rise at ${i}: ${v}`))
+    assert.ok(p.slice(k).every(v => Math.abs(v - sigma_N) < 1e-12))
 
-    // Yield path used up before equilibrium: σ_N up to the end of the yield path, then rate of flow
+    // Yield path used up before equilibrium: rise, σ_N over the yield path, then rate of flow
     // continues from σ_N (the shell is loaded further, no drop back towards 0)
     const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 600 })
+    const sN = 600 / 1000 / DEFAULTS.t_c
     const s = obj.actualStress.y
-    const n = s.findIndex(v => Math.abs(v - 600 / 1000 / DEFAULTS.t_c) > 1e-12)
-    assert.ok(n > 0 && n < s.length)
+    const a = s.findIndex(v => Math.abs(v - sN) < 1e-12)
+    const n = a + s.slice(a).findIndex(v => Math.abs(v - sN) > 1e-12)
+    assert.ok(a > 1 && n > a && n < s.length)
+    assert.ok(s.slice(0, a).every(v => v < sN))
     assert.ok(s[n] >= s[n - 1], `drop at end of yield path: ${s[n - 1]} -> ${s[n]}`)
-    assert.ok(s.every(v => v > 0))
+    // rateOfFlow() returns σ = 0 for the first two points (as without LSC)
+    assert.ok(s.slice(2).every(v => v > 0))
 })
 
 test('Shotcrete capacity decides whether the LSC yields (bolts not included)', () => {
