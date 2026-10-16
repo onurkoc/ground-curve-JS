@@ -40,11 +40,15 @@ A web application for analytical pre-design of tunnel support using the **Conver
   Legend with LSC: *FS (total)* = p_max,total / p_eq, *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
   (on the plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt and, on the plateau,
   the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
+
+  Note: FS comes from the 28-day elastic support curve; σ(t) and μ_SpC come from the rate-of-flow method.
+  The start and end of the yield path can differ between both (the young shell is softer than the 28-day
+  stiffness K_SpC, so σ(t) reaches σ_N later than u_lsc = u_io + p_LSC / K_SpC).
 - **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991).
   With F_LSC > 0 (force-controlled): rate of flow from 0 until σ(t) reaches σ_N = F_LSC / t_c, then constant
   σ_N over the yield path u_gap (Gschwandtner S. 56); rate of flow then continues from σ_N, with creep,
   shrinkage and thermal terms counted from the start of loading. Start and end of yielding are found in the
-  time series and can differ from the 28-day support curve used for FS (noted in the Enhanced tab)
+  time series and can differ from the 28-day support curve used for FS (see the note under LSC)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35).
   Not capped: values above 100 % (red dashed line, shaded band) mean the young shotcrete is overloaded
 - **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments are searched, so FS > 10 is found as well)

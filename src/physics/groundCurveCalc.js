@@ -718,9 +718,6 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         legend: { traceorder: 'normal', font: { family: 'arial', size: 16, color: '#000' }, bgcolor: '#E2E2E2', bordercolor: '#FFFFFF', borderwidth: 1.5 },
         shapes: verticalLines
     }
-    // With a loaded LSC the support curve (FS) and the time plots (σ, μ_SpC) use different shell
-    // stiffness, so the start and end of the yield path need not coincide
-    const lscNote = obj.lsc.p_LSC > 0 && obj.lsc.u_gap > 0
 
     const layoutBasic = {
         title: { text: 'Ground Reaction Curve', font: { size: 18 } }, plot_bgcolor: '#f9f7f7', showlegend: true,
@@ -773,16 +770,6 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
         // Basic: legend sits top right, so the message goes to the lower middle
         layoutBasic.annotations = [message('x domain', 'y domain', 0.5, 0.3, 'center', 'middle')]
-    }
-    // Enhanced, loaded LSC: note under the title, the top margin grows by the note's lines
-    if (lscNote) {
-        const lines = options.legendBelow
-            ? ['FS from 28-day elastic support curve;', 'σ(t) and μ_SpC from rate-of-flow method –',
-                'yield path start/end can differ between both.']
-            : ['FS from 28-day elastic support curve; σ(t) and μ_SpC from rate-of-flow method –',
-                'yield path start/end can differ between both.']
-        layout.title.subtitle = { text: lines.join('<br>'), font: { family: 'Arial, sans-serif', size: 11, color: '#444' } }
-        layout.margin = { ...layout.margin, t: layout.margin.t + 16 * lines.length + (options.legendBelow ? 20 : 8) }
     }
 
     // Phone layout: no mode bar, so it cannot cover the chart title
