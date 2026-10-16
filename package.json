@@ -2,11 +2,11 @@
   "name": "groundcurve",
   "version": "1.8",
   "description": "Tunnel ground reaction curve analysis — Convergence-Confinement Method",
-  "main": "out/main/main.js",
+  "type": "module",
   "scripts": {
-    "start": "electron-vite dev",
-    "build": "electron-vite build",
-    "package-win": "npm run build && electron-packager . GroundCurve --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/icons/win/icon.ico --prune=true --out=release-builds --ignore=\"^/src|^/electron|^/\\.vite|^/index\\.html|^/release-builds\" --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"GroundCurve\"",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "node --import ./tests/register-stubs.mjs --test tests/hoek.test.js tests/rocsupport.test.js tests/golden.test.js"
   },
   "author": "Onur Koc",
@@ -16,7 +16,6 @@
     "@primevue/themes": "^4.2.5",
     "@turf/helpers": "^7.3.5",
     "@turf/line-intersect": "^7.3.5",
-    "jshint": "^2.13.6",
     "plotly.js-cartesian-dist": "^3.6.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.5",
@@ -24,10 +23,7 @@
     "vue": "^3.5.39"
   },
   "devDependencies": {
-    "@electron/packager": "^20.0.1",
     "@vitejs/plugin-vue": "^5.2.1",
-    "electron": "^42.0.0",
-    "electron-vite": "^2.3.0",
     "eslint": "^8.3.0",
     "vite": "^5.4.11"
   }
