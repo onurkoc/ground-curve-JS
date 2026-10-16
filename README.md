@@ -32,15 +32,21 @@ A web application for analytical pre-design of tunnel support using the **Conver
   - `F_LSC` = ring normal force carried while the element yields [kN per m tunnel], default 0.
     Support pressure on the plateau p_LSC = F_LSC / r_m with r_m = D/2 − t_c/2 (Anhang D, Gl. 2-10 D)
 
-  Support curve: elastic rise to p_LSC → constant p_LSC over u_gap → elastic rise to p_max.
-  F_LSC = 0 gives the former open-slot model (zero pressure until the gap is closed).
-  If the equilibrium lies on the plateau, the legend shows *FS (shotcrete) = p_max / p_LSC* and the
-  *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
-- **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991)
+  Shotcrete curve: elastic rise to p_LSC → constant p_LSC over u_gap → elastic rise to p_max,SpC.
+  F_LSC = 0 gives the open-slot model (zero shotcrete pressure until the gap is closed).
+  The LSC yields only if p_LSC < p_max,SpC (shotcrete capacity alone).
+  Bolts act independently of the yield path: shotcrete and bolt curves both start at u_io and their
+  pressures are added at equal displacement (Gschwandtner Gl. V-50, Abb. V-51); the components are drawn dotted.
+  Legend with LSC: *FS (total)* = p_max,total / p_eq, *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
+  (on the plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt and, on the plateau,
+  the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
+- **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991).
+  With F_LSC > 0 the shell carries the constant stress σ_N = F_LSC / t_c from u_io to the end of the yield path
+  (Gschwandtner S. 56); rate of flow then continues from σ_N, with creep, shrinkage and thermal terms counted from the start of loading
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
 - **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments are searched, so FS > 10 is found as well)
 - **Parameter tab** — summary of all 20 input parameters with units
-- **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart
+- **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
 
 ---
 
