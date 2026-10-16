@@ -358,7 +358,7 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         x: obj.groundCurveLargeStrain.x, y: obj.groundCurveLargeStrain.y,
         mode: 'lines', type: 'scatter',
         name: 'Ground Curve LS (Vrakas & Anagnostou 2015)<br>' +
-            '<span style="font-size:12px">nur Darstellung, Bemessungswerte nach Kleinverformungslösung</span>',
+            '<span style="font-size:12px">display only – design values from small-strain solution</span>',
         line: { color: 'darkturquoise', dash: 'dashdot' }, opacity: 0.7,
         xaxis: 'x1', yaxis: 'y1', hoverinfo: 'x+y'
     }
