@@ -642,12 +642,30 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
 
     if (options.legendBelow) {
         const below = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top', font: { size: 11 } }
-        Object.assign(layout.legend, below)
+        Object.assign(layout.legend, below, { y: -0.06 })
         Object.assign(layoutBasic.legend, below, { y: -0.18 })
         layout.margin = { ...layout.margin, l: 50, r: 10 }
         layoutBasic.margin = { ...layoutBasic.margin, l: 50, r: 10 }
+        layout.title.font = { size: 14 }
+        layoutBasic.title.font = { size: 14 }
+        // Enhanced: stack the four plots (GRC, LDP, μ_SpC, stress) instead of a 2 × 2 grid so the
+        // axis titles do not overlap the neighbouring plot
+        Object.assign(layout.xaxis, { domain: [0, 1] })
+        Object.assign(layout.xaxis2, { domain: [0, 1] })
+        layout.yaxis.domain = [0.79, 1]
+        layout.yaxis2.domain = [0.555, 0.75]
+        layout.yaxis3.domain = [0.27, 0.465]
+        layout.yaxis4.domain = [0, 0.195]
+        for (const axis of ['xaxis', 'xaxis2', 'yaxis', 'yaxis2', 'yaxis3', 'yaxis4']) {
+            layout[axis].title.font = { ...layout[axis].title.font, size: 11 }
+        }
     }
 
-    Plotly.newPlot('graph', data, layout, { displayModeBar: true, displaylogo: false, responsive: true, modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'] })
-    Plotly.newPlot('graphBasic', dataBasic, layoutBasic, { displayModeBar: true, displaylogo: false, responsive: true, modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d'] })
+    // Phone layout: no mode bar, so it cannot cover the chart title
+    const config = {
+        displayModeBar: !options.legendBelow, displaylogo: false, responsive: true,
+        modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d']
+    }
+    Plotly.newPlot('graph', data, layout, config)
+    Plotly.newPlot('graphBasic', dataBasic, layoutBasic, config)
 }

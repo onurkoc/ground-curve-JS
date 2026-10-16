@@ -268,6 +268,13 @@ html, body, #app {
     .chart-tab-content {
         height: calc(100vh - var(--tabbar-h) - var(--mobilebar-h));
         padding: 4px;
+        overflow-y: auto;
+    }
+
+    /* Enhanced: four stacked plots need more height than the screen; the tab scrolls */
+    .chart-tab-content > #graph {
+        flex: none;
+        height: 1150px !important;
     }
 
     .chart-tabs .p-tab {
