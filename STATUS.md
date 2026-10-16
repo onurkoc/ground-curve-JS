@@ -24,11 +24,16 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
   - Spritzbeton- und Ankerkennlinie getrennt ab u_io, Anker nicht um u_gap verschoben, Summe der Drücke
     bei gleichem u (Gl. V-50, Abb. V-51).
   - Ausgaben: FS (total), FS (shotcrete), Anker-Auslastung, im Plateau verbleibender Stauchweg (tangential, mm).
-  - Rate-of-Flow in drei Phasen: u_io … u_lsc = u_io + p_LSC/K_SpC Anstieg ab 0 mit der Fließratenmethode
-    (wie ohne LSC, begrenzt auf σ_N); u_lsc … Ende Stauchweg konstant σ_N = F_LSC / t_c (S. 56);
-    danach Fließratenmethode weiter ab σ_N. Kriechen, Schwinden und Temperatur zählen ab Belastungsbeginn
-    (siehe *Zu prüfen* unten).
-  - μ_SpC wird nicht mehr bei 100 % begrenzt; Bereich > 100 % im Diagramm rot markiert („overloaded").
+  - Rate-of-Flow kraftgesteuert in drei Phasen: Anstieg ab 0 mit der Fließratenmethode (wie ohne LSC), bis
+    σ(t) = σ_N = F_LSC / t_c; ab diesem Punkt u_ys konstant σ_N (S. 56) bis u_ys + u_gap, beides in der
+    Zeitreihe bestimmt (nicht aus u_lsc bzw. Ende Stauchweg der 28-Tage-Kennlinie); danach Fließratenmethode
+    weiter ab σ_N. Wird σ_N nie erreicht, staucht das Element nicht. Beginn/Ende { t, u } in
+    `lsc.yieldRateOfFlow`. Kriechen, Schwinden und Temperatur zählen ab Belastungsbeginn (siehe *Zu prüfen* unten).
+  - μ_SpC wird nicht mehr bei 100 % begrenzt; rote Strichlinie bei 100 %, rotes Band darüber,
+    Legende „> 100 %: overloaded (max … %)", Achse in ganzen Prozent.
+  - Enhanced-Tab bei F_LSC > 0 mit Untertitel: „FS from 28-day elastic support curve; σ(t) and μ_SpC from
+    rate-of-flow method – yield path start/end can differ between both."
+  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px).
 - Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
   (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
 
@@ -37,7 +42,8 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
 **Kriechen, Schwinden und Temperatur ab Belastungsbeginn (nach Ende Stauchweg)** – eingeführt in
 Commit 799116f ohne ausdrücklichen Auftrag.
 
-- Was: Mit F_LSC > 0 läuft `rateOfFlow()` nach dem Stauchweg mit `tLoadDays = t_gap_days` weiter.
+- Was: Mit F_LSC > 0 läuft `rateOfFlow()` nach dem Stauchweg mit `tLoadDays = t_gap_days` weiter
+  (t_gap_days = Zeit ab u_io bis Stauchende nach Fließratenmethode).
   Die Zeit in C(t) = A · t_h^0,25 (Kriechen), ε_sh(t) = ε_sh,∞ · t/(t + B) (Schwinden) und
   θ(t) = 250 · t^0,25 (Temperatur) läuft damit ab u_io (Einbau = Belastungsbeginn) weiter, nicht ab Ende Stauchweg.
   E_SpC(t) nutzte schon vorher das wahre Betonalter (Aldrian, Gl. V-41).
@@ -60,10 +66,14 @@ Commit 799116f ohne ausdrücklichen Auftrag.
 
 Weitere Hinweise:
 
-- Bei großer Mobilisierungskraft ist der junge Spritzbeton überlastet: App-Standard (mit Ankern), LSC 20 cm,
-  F_LSC 2400 kN/m → σ_N 12 MPa, μ_SpC > 100 % bis 0,60 d, Maximum 457 % bei 0,122 d.
-- Am Übergang u_lsc springt σ von 8,98 MPa (Fließratenmethode, junger Beton) auf σ_N = 12 MPa:
-  u_lsc folgt aus der 28-Tage-Steifigkeit K_SpC der Kennlinie, die Fließratenmethode aus E_SpC(t).
+- Fall C (App-Standard mit Ankern, LSC 20 cm, F_LSC 2400 kN/m, σ_N 12 MPa): u 0,08772 m, p 0,6987 MPa,
+  FS 2,212, FS (shotcrete) 2,377, Anker 100 %. Stauchbeginn 28-Tage-Kennlinie u 0,06542 m / t 0,120 d,
+  Fließratenmethode u 0,06576 m / t 0,149 d; Stauchende 0,09725 bzw. 0,09759 m, in beiden nicht erreicht
+  (Gleichgewicht im Plateau). μ_SpC > 100 % von 0,011 bis 0,60 d, Maximum 371 % bei 0,148 d,
+  Minimum 41,0 % bei 16,72 d. Kein Spannungssprung mehr am Stauchbeginn.
+- Die Zeitreihe endet vor u_eq (LDP-Zuordnung, z. B. F_LSC 600 kN/m, LSC 20 cm, ohne Anker: letzte Stelle
+  0,09640 m, u_eq 0,09699 m). Liegt das Stauchende nach Fließratenmethode dazwischen, endet die Zeitreihe
+  im Plateau, obwohl die 28-Tage-Kennlinie das Gleichgewicht nach dem Stauchweg hat.
 - Anker (App-Standard: T_bf 250 kN, s_l 2 m, s_r 1,5 m, d_b 0,034 m, l_b 3 m) erreichen p_max,bolt
   0,0833 MPa nach Δu = p_bmax_el / k_b_el = 0,0833 / 20,88 = 3,99 mm (nicht 0,2 mm).
 - Ungenutzte Abhängigkeiten `regression`, `@turf/helpers`, `@turf/line-intersect`.
