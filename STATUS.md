@@ -5,7 +5,7 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 20 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 24 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
@@ -31,7 +31,22 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
     Legende „> 100 %: overloaded (max … %)", Achse in ganzen Prozent.
   - Enhanced-Tab bei F_LSC > 0 mit Untertitel: „FS from 28-day elastic support curve; σ(t) and μ_SpC from
     rate-of-flow method – yield path start/end can differ between both."
-  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px).
+  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px, Stand vor
+    der u_im-Korrektur und mit dem inzwischen entfernten Untertitel).
+  - Eingabe „LSC force" (F_LSC) und „LSC" mit Hilfetext in der Seitenleiste. Der Hinweis „FS aus
+    28-Tage-Kennlinie, σ(t)/μ_SpC aus Fließratenmethode" steht im README unter LSC (nicht mehr im Diagramm).
+- Kein Gleichgewicht (Ausbau insgesamt zu schwach): FS „–", Meldung „no equilibrium – support capacity
+  insufficient" im Basic- und Enhanced-Tab; LDP, σ und μ_SpC ausgeblendet mit derselben Meldung.
+  Prüffall A (`tests/equilibrium.test.js`): D 11 m, f_ck 25 MPa, E_c 15000 MPa, t_c 0,15 m, LSC 7 cm,
+  F_LSC 600 kN/m, T_bf 173 kN, s_l = s_r 1 m, d_b 0,02 m, l_b 10 m, γ 20, H 500, sonst App-Standard.
+  p_max,gesamt 0,8455 MPa (SpC 0,6725 + Anker 0,173) bei u 0,10435 m; Gebirgskennlinie dort 0,9990 MPa,
+  erreicht 0,8455 MPa erst bei u 0,1121 m. Kein Schnittpunkt verworfen, keine Konsolenfehler.
+  Screenshot `docs/screenshots/web/desktop_enhanced_no_equilibrium_caseA.png`.
+- Gleichgewicht nach p_max,SpC (nur die Anker steigen noch): Legende (Basic und Enhanced)
+  „shotcrete at p_max (plastic) – limit state". Prüffall B (wie A, γ 18,3, H 443): u_eq 0,07622 m auf dem
+  Abschnitt 0,07460 → 0,08150 m, FS (total) 1,042, FS (shotcrete) 1,00, Anker 80 %. Nur das flache
+  Darstellungs-Endstück nach dem letzten Knick ist von der Schnittpunktsuche ausgenommen.
+  Screenshot `docs/screenshots/web/desktop_enhanced_shotcrete_limit_caseB.png`.
 - Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
   (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
 - **Fehler korrigiert: LDP unter Stützdruck, Zeitreihe endete vor u_eq.**
@@ -73,7 +88,11 @@ Commit 799116f ohne ausdrücklichen Auftrag.
 2. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
 3. **Prüfung auf echtem Handy** (bisher nur Browser-Emulator 390 × 844).
-4. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
+4. **σ(t) aus der Fließratenmethode ohne Festigkeitsgrenze**: Fall B (FS (shotcrete) = 1,00, Schale im
+   28-Tage-Modell bei p_max) zeigt nach dem Stauchweg σ bis ≈ 43 MPa > f_ck 25 MPa und μ_SpC max 193 %.
+   Die Fließratenmethode rechnet viskoelastisch weiter, ohne Plastizität bei σ = f(t). Klären, ob σ(t)
+   auf die Festigkeit σ_cap(t) begrenzt oder ab μ > 100 % nur als Überlastung angezeigt werden soll.
+5. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
 
    Ende der Zeitreihe vor/nach der Korrektur:
 
