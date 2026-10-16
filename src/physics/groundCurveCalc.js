@@ -593,6 +593,11 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
                 ? `FS (shotcrete) = p_max,SpC / p_LSC = ${lsc.FS_shotcrete.toFixed(2)}`
                 : `FS (shotcrete) = ${lsc.FS_shotcrete.toFixed(2)}`))
         }
+        // Equilibrium after the shotcrete has reached p_max,SpC (only the bolts still rise there):
+        // the shell is plastic, FS (shotcrete) = 1
+        if (!noEquilibrium && intersect.x >= shotcrete.x[shotcrete.x.length - 1] - EPS) {
+            entries.push(legendOnly('shotcrete at p_max (plastic) – limit state'))
+        }
         if (lsc.boltUtilisation !== null) {
             entries.push(legendOnly(`bolt utilisation: ${(lsc.boltUtilisation * 100).toFixed(0)} %`))
         }
