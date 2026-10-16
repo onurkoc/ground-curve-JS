@@ -41,9 +41,11 @@ A web application for analytical pre-design of tunnel support using the **Conver
   (on the plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt and, on the plateau,
   the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
 - **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991).
-  With F_LSC > 0 the shell carries the constant stress σ_N = F_LSC / t_c from u_io to the end of the yield path
-  (Gschwandtner S. 56); rate of flow then continues from σ_N, with creep, shrinkage and thermal terms counted from the start of loading
-- **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35)
+  With F_LSC > 0: rate of flow from 0 up to u_lsc = u_io + p_LSC / K_SpC (limited to σ_N), constant stress
+  σ_N = F_LSC / t_c from u_lsc to the end of the yield path (Gschwandtner S. 56); rate of flow then continues
+  from σ_N, with creep, shrinkage and thermal terms counted from the start of loading
+- **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35).
+  Not capped: values above 100 % (red dashed line, shaded band) mean the young shotcrete is overloaded
 - **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments are searched, so FS > 10 is found as well)
 - **Parameter tab** — summary of all 20 input parameters with units
 - **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
