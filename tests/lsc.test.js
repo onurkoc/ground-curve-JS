@@ -106,6 +106,14 @@ test('Rate of flow: rise to u_lsc, constant σ_N = F_LSC / t_c during the yield 
     assert.ok(s.slice(2).every(v => v > 0))
 })
 
+test('μ_SpC is not capped at 100 % (overloaded young shotcrete)', () => {
+    const { obj } = run({ ...DEFAULTS, l_yield: 20, F_LSC: 2400 })
+    const mu = obj.utilisationSpC.y
+    assert.ok(Math.max(...mu) > 100)
+    // once the shotcrete has gained strength the shell under σ_N = 12 MPa is below 100 % again
+    assert.ok(mu.at(-1) < 100)
+})
+
 test('Shotcrete capacity decides whether the LSC yields (bolts not included)', () => {
     // p_LSC between p_max,SpC (1.4625 MPa) and p_max,SpC + p_max,bolt (1.5458 MPa): never yields
     const r_m = DEFAULTS.D / 2 - DEFAULTS.t_c / 2

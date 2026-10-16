@@ -426,13 +426,13 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
         const stressActual = data_object.actualStress.y
 
-        // Utilisation μ_SpC(t) = σ_actual(t) / σ_capacity(t) × 100%
+        // Utilisation μ_SpC(t) = σ_actual(t) / σ_capacity(t) × 100%, not capped: > 100 % = overloaded
         const muY = data_object.actualStress.x.map((t, i) => {
             const idx = time_28days.findIndex(td => td >= t)
             if (idx <= 0) return 0
             const cap = sigma[idx - 1] + (sigma[idx] - sigma[idx - 1]) *
                 (t - time_28days[idx - 1]) / (time_28days[idx] - time_28days[idx - 1])
-            return cap > 0 ? Math.min(stressActual[i] / cap * 100, 100) : 0
+            return cap > 0 ? stressActual[i] / cap * 100 : 0
         })
         data_object.utilisationSpC = { x: data_object.actualStress.x, y: muY }
     } else {
@@ -618,7 +618,26 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
             line: { color: 'black', width: 1, dash: 'dot' },
             xaxis: 'x2', yaxis: 'y3'
         })
+        // μ_SpC is not capped: above 100 % the young shotcrete is overloaded
+        const muMax = Math.max(...obj.utilisationSpC.y)
+        data.push({
+            x: [0, obj.utilisationSpC.x.at(-1)],
+            y: [100, 100],
+            mode: 'lines', hoverinfo: 'none',
+            name: muMax > 100
+                ? `> 100 %: overloaded (max ${muMax.toFixed(0)} %)`
+                : '> 100 %: overloaded',
+            line: { color: 'red', width: 1.5, dash: 'dash' },
+            xaxis: 'x2', yaxis: 'y3'
+        })
+        if (muMax > 100) {
+            verticalLines.push({
+                type: 'rect', xref: 'x2', yref: 'y3', x0: 0, x1: obj.utilisationSpC.x.at(-1),
+                y0: 100, y1: muMax * 1.05, fillcolor: 'red', opacity: 0.08, line: { width: 0 }, layer: 'below'
+            })
+        }
     }
+    const muRangeMax = obj.utilisationSpC ? Math.max(110, Math.max(...obj.utilisationSpC.y) * 1.05) : 110
     data.push({
         x: obj.targetStress.x, y: obj.targetStress.y,
         mode: 'lines', name: 'Stress (target)', line: { color: 'green' }, xaxis: 'x2', yaxis: 'y4'
@@ -635,7 +654,7 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         xaxis2: { title: { text: 'Time [days]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.2f', domain: [0.55, 1], anchor: 'y4' },
         yaxis: { tickformat: '.1f', title: { text: 'Support Pressure [MPa]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', range: [0, maxY], domain: [0.55, 1], rangemode: 'nonnegative' },
         yaxis2: { title: { text: 'Distance from Tunnel Face [m]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: 'd', range: [80, -25], domain: [0, 0.50], anchor: 'x1' },
-        yaxis3: { title: { text: 'Utilisation μ_SpC [%]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.1f', range: [0, 110], domain: [0.55, 1], anchor: 'x2' },
+        yaxis3: { title: { text: 'Utilisation μ_SpC [%]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.1f', range: [0, muRangeMax], domain: [0.55, 1], anchor: 'x2' },
         yaxis4: { title: { text: 'Stress SpC [MPa]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.2f', domain: [0, 0.50], anchor: 'x2', rangemode: 'nonnegative' },
         legend: { traceorder: 'normal', font: { family: 'arial', size: 16, color: '#000' }, bgcolor: '#E2E2E2', bordercolor: '#FFFFFF', borderwidth: 1.5 },
         shapes: verticalLines
