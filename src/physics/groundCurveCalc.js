@@ -553,10 +553,14 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         line: { color: 'red' }, xaxis: 'x1', yaxis: 'y1'
     }
     const fsText = noEquilibrium ? '–' : Number(safety).toFixed(2)
+    const fsName = obj.supportComponents ? `FS (total) = ${fsText}` : `FS. ${fsText}`
+    // FS (total) below γ_F = 1.35 in red (same threshold as the 80 % design limit of μ_SpC = 1/1.35);
+    // display only, no further assessment
+    const FS_RED_BELOW = 1.35
     const trace3 = {
         x: noEquilibrium ? [0] : [intersect.x], y: noEquilibrium ? [0] : [intersect.y],
         mode: 'markers', type: 'scatter',
-        name: obj.supportComponents ? `FS (total) = ${fsText}` : `FS. ${fsText}`,
+        name: !noEquilibrium && Number(safety) < FS_RED_BELOW ? `<span style="color:red">${fsName}</span>` : fsName,
         marker: { color: 'green', size: 10 }, xaxis: 'x1', yaxis: 'y1',
         ...(noEquilibrium ? { opacity: 0, hoverinfo: 'none', showlegend: true } : {})
     }

@@ -9,7 +9,7 @@
 // The equilibrium checks are independent of the app's intersection search.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { run, ARG_ORDER } from './helpers.js'
+import { run, ARG_ORDER, DEFAULTS } from './helpers.js'
 import { updateGraphic } from '../src/physics/groundCurveCalc.js'
 import { calls } from './stubs/plotly.js'
 
@@ -42,7 +42,8 @@ function groundU(g, p) {
 // Plots built by updateGraphic(): { graph, graphBasic }
 function plots(inputs) {
     calls.length = 0
-    updateGraphic(...ARG_ORDER.map(k => inputs[k]), {})
+    const p = { ...DEFAULTS, ...inputs }
+    updateGraphic(...ARG_ORDER.map(k => p[k]), {})
     return Object.fromEntries(calls.map(c => [c.id, c]))
 }
 const names = plot => plot.data.map(t => t.name ?? '')
@@ -138,6 +139,16 @@ test('Without LSC: equilibrium on the summed elastic line, FS (total) = sum of p
     assert.equal(Number(safetyFactor), Number((p_sum / intersection.y).toFixed(3)))
     assert.deepEqual(obj.yielding, { shotcrete: false, bolts: false })
     assert.ok(!has(plots({}).graph, /yielding/))
+})
+
+// FS (total) below 1.35 (γ_F, as the 80 % design limit of μ_SpC) is shown in red
+test('Legend: FS (total) < 1.35 in red, otherwise unchanged', () => {
+    const fsTrace = plot => plot.data.find(t => /FS(\.| \(total\))/.test(t.name ?? ''))
+    const red = /^<span style="color:red">FS \(total\) = 1\.04<\/span>$/
+    assert.match(fsTrace(plots(FALL_B).graph).name, red)
+    assert.match(fsTrace(plots({}).graph).name, /color:red.*1\.20/)
+    const caseC = { l_yield: 20, F_LSC: 2400 }
+    assert.equal(fsTrace(plots(caseC).graph).name, 'FS (total) = 2.21')
 })
 
 // "no equilibrium" only if the ground curve lies above the total curve over its whole length; with
