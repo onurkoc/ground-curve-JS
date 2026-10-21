@@ -41,8 +41,8 @@ test('Anhang B: p_LSC, yield path and p_max (source values)', () => {
 
 test('F_LSC = 0 keeps the open-slot curve (shotcrete only)', () => {
     const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 0 })
-    // [u_io, 0] -> [u_io + u_gap, 0] -> [u_spc_top, p_max,SpC], no end piece
-    assert.equal(obj.supportCurve.x.length, 3)
+    // [u_io, 0] -> [u_io + u_gap, 0] -> [u_spc_top, p_max,SpC] -> plateau to the end of the ground curve
+    assert.equal(obj.supportCurve.x.length, 4)
     assert.deepEqual(obj.supportCurve.y.slice(0, 2), [0, 0])
     assert.equal(obj.lsc.inPlateau, false)
 })
