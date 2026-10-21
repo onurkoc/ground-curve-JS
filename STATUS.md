@@ -1,6 +1,8 @@
 # Status
 
-Stand: 2026-10-21, Version 2.0.0, Branch `web` (Merge nach `main` mit Release 2.0.0).
+Stand: 2026-10-21, Version 2.0.0 veröffentlicht: PR #1 `web` → `main` als Merge-Commit 3d0c308, Tag `v2.0.0`,
+Produktion aus `main` unter https://groundcurve.onurkoc.net. `web` auf `main` nachgezogen (Fast-Forward) und bleibt
+Arbeitsbranch.
 
 ## Erledigt
 
@@ -141,8 +143,24 @@ Offen gegenüber Entfellner:
 
 ## Release 2.0.0
 
-- Version 2.0.0 (`package.json`), Eintrag „2.0.0 – web app" im Change Log, Live-App
-  https://groundcurve.onurkoc.net (Custom Domain und Cache Rule richtet Onur im Cloudflare-Dashboard ein).
+- Version 2.0.0 (`package.json`), Eintrag „2.0.0 – web app" (2026-10-21) im Change Log.
+- PR #1 `web` → `main` mit Merge-Commit gemergt (kein Squash/Rebase):
+  `3d0c30822f92fd9083c0be1dfb162b4d02e819bb` „Merge pull request #1 from onurkoc/web – GroundCurve 2.0.0 – web app".
+  Danach auf `main` der leere Commit e60424f „Trigger Cloudflare Pages production build" (Tree identisch).
+- Annotiertes Tag `v2.0.0` auf 3d0c308 („GroundCurve 2.0.0 – Web-App (Cloudflare Pages)"), nach `origin` gepusht.
+  `npm run test` auf dem Release-Stand: 40 Tests grün.
+- Produktion = `main` (Cloudflare Pages), Custom Domain https://groundcurve.onurkoc.net aktiv; Cache Rule
+  „Pages-Apps: Header der Quelle" der Zone `onurkoc.net` gilt auch für `groundcurve.onurkoc.net`.
+- curl-Prüfung 2026-10-21 (beide Adressen liefern denselben Build: `assets/index-BzZ6g64-.js`,
+  `assets/index-CS355HJ7.css`):
+
+  | Adresse | Pfad | Status | cache-control | cf-cache-status |
+  |---|---|---|---|---|
+  | groundcurve.pages.dev | `/` | 200 | no-cache | (nicht gesendet) |
+  | groundcurve.pages.dev | `/assets/index-BzZ6g64-.js` | 200 | public, max-age=31536000, immutable | (nicht gesendet) |
+  | groundcurve.onurkoc.net | `/` | 200 | no-cache | EXPIRED (auch beim 2. Abruf: Revalidierung) |
+  | groundcurve.onurkoc.net | `/assets/index-BzZ6g64-.js` | 200 | public, max-age=31536000, immutable | MISS, 2. Abruf HIT |
+
 - Behoben vor dem Release: μ_SpC = 0 ab 27,96 d (Festigkeit ab 671 h jetzt konstant; nur Golden-Set
   `rateOfFlow` betroffen, 24 Punkte ab 28,16 d, μ_SpC dort 17,2 % statt 0).
 - Desktop v1.8.1 bleibt die letzte Desktop-Version; sie enthält den korrigierten u_im(p_i)-Fehler noch

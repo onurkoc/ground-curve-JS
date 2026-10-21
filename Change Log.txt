@@ -1,4 +1,4 @@
-What's new in Version 2.0.0 – web app (changes since v1.8.1):
+What's new in Version 2.0.0 – web app, 2026-10-21 (changes since v1.8.1):
 
 - Platform
     - Electron removed; GroundCurve is a static web app (Vite 5, output in

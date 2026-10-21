@@ -3,6 +3,23 @@
 Die App ist eine statische Vite-Seite. Cloudflare Pages baut sie aus dem GitHub-Repository
 `onurkoc/ground-curve-JS`.
 
+## Stand (Release 2.0.0, 2026-10-21)
+
+- Produktion = Branch `main`; `web` ist mit PR #1 als Merge-Commit 3d0c308 nach `main` gemergt.
+  Tag `v2.0.0` → `3d0c30822f92fd9083c0be1dfb162b4d02e819bb`.
+- Adressen: https://groundcurve.onurkoc.net (Custom Domain, aktiv) und https://groundcurve.pages.dev.
+- Cache Rule „Pages-Apps: Header der Quelle" der Zone `onurkoc.net` gilt auch für `groundcurve.onurkoc.net`
+  (statt der unten in Abschnitt 3 vorgeschlagenen eigenen Regel).
+- Prüfung nach Abschnitt 4 am 2026-10-21, beide Adressen gleicher Build (`assets/index-BzZ6g64-.js`,
+  `assets/index-CS355HJ7.css`):
+
+  | Adresse | Pfad | Status | cache-control | cf-cache-status |
+  |---|---|---|---|---|
+  | groundcurve.pages.dev | `/` | 200 | no-cache | (nicht gesendet) |
+  | groundcurve.pages.dev | `/assets/index-BzZ6g64-.js` | 200 | public, max-age=31536000, immutable | (nicht gesendet) |
+  | groundcurve.onurkoc.net | `/` | 200 | no-cache | EXPIRED (Revalidierung bei jedem Abruf) |
+  | groundcurve.onurkoc.net | `/assets/index-BzZ6g64-.js` | 200 | public, max-age=31536000, immutable | MISS, danach HIT |
+
 ## 1. Pages-Projekt anlegen
 
 Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → Repository `onurkoc/ground-curve-JS`.
@@ -18,9 +35,10 @@ Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to 
 
 `public/_headers` und das Favicon werden von Vite unverändert nach `dist/` kopiert.
 
-## 2. Branch control (nur Vorschau aus `web`)
+## 2. Branch control
 
-`main` enthält bis zum Merge noch die Electron-Version und darf nicht gebaut werden.
+Vor dem Release (bis 2026-10-21) enthielt `main` noch die Electron-Version und wurde nicht gebaut; die folgende
+Einstellung galt bis zum Merge. Seit Release 2.0.0 ist `main` der Produktionsbranch.
 
 **Settings → Builds → Branch control**
 
