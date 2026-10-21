@@ -513,10 +513,16 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
         const stressActual = data_object.actualStress.y
 
-        // Utilisation μ_SpC(t) = σ_actual(t) / σ_capacity(t) × 100%, not capped: > 100 % = overloaded
+        // Utilisation μ_SpC(t) = σ_actual(t) / σ_capacity(t) × 100%, not capped: > 100 % = overloaded.
+        // The strength curve is tabulated up to 671 h (27.96 d); later the strength stays constant at
+        // its last value (before, μ_SpC dropped to 0 there).
         const muY = data_object.actualStress.x.map((t, i) => {
             const idx = time_28days.findIndex(td => td >= t)
-            if (idx <= 0) return 0
+            if (idx < 0) {
+                const capEnd = sigma[sigma.length - 1]
+                return capEnd > 0 ? stressActual[i] / capEnd * 100 : 0
+            }
+            if (idx === 0) return 0
             const cap = sigma[idx - 1] + (sigma[idx] - sigma[idx - 1]) *
                 (t - time_28days[idx - 1]) / (time_28days[idx] - time_28days[idx - 1])
             return cap > 0 ? stressActual[i] / cap * 100 : 0

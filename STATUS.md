@@ -5,7 +5,7 @@ Stand: 2026-10-21, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 35 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 36 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
@@ -152,10 +152,11 @@ Offen gegenüber Entfellner:
    | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 / 14,22 | 0,09699 / 17,23 |
    | (c) Fall C | 0,08772 | 0,08714 / 16,72 | 0,08771 / 15,70 |
 
-5. **μ_SpC = 0 ab einem Alter von 27,96 d** (Befund, nicht geändert): Die Festigkeitskurve (Aldrian) ist nur
-   bis 671 h tabelliert; für spätere Zeiten findet die Suche keinen Wert und μ_SpC wird 0. Betrifft Zeitreihen
-   länger als 28 d, z. B. Golden-Set `rateOfFlow` (0,5 m/d, Zeitreihe bis 55 d). Vorschlag: Festigkeit nach
-   28 d konstant fortsetzen.
+5. ~~**μ_SpC = 0 ab einem Alter von 27,96 d**~~ **behoben:** Die Festigkeitskurve (Aldrian) ist nur bis
+   671 h tabelliert; danach fand die Suche keinen Wert und μ_SpC wurde 0. Jetzt bleibt die Festigkeit ab 671 h
+   konstant auf dem letzten Wert. Betrifft nur Zeitreihen länger als 28 d: Golden-Set `rateOfFlow` (0,5 m/d,
+   bis 55 d), 24 Punkte ab 28,16 d, μ_SpC dort 17,2 % statt 0, am Ende 10,5 % statt 0. Übrige Golden-Sets
+   und Fall C unverändert.
 
 Weitere Hinweise:
 

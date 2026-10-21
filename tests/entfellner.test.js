@@ -21,6 +21,20 @@ test('Abb. 6.16 a: viscous strain C(28 d) ≈ 0.00023 MPa⁻¹ (Gl. 6.14, t1 = 3
     assert.ok(viscousStrain(28 * 24) > C && viscousStrain(28 * 24) - C < 0.000001)
 })
 
+// μ_SpC after 28 d: the strength stays at its last tabulated value (671 h), μ_SpC does not drop to 0
+test('μ_SpC beyond an age of 28 d uses the strength at 671 h (no drop to 0)', async () => {
+    const { run, DEFAULTS } = await import('./helpers.js')
+    const { obj } = run({ ...DEFAULTS, advance_rate: 0.5 })
+    const { x, y } = obj.utilisationSpC
+    const capEnd = obj.targetStress.y[obj.targetStress.y.length - 1]
+    const late = x.map((t, i) => [t, i]).filter(([t]) => t > obj.targetStress.x[obj.targetStress.x.length - 1])
+    assert.ok(late.length > 0, 'series longer than 28 d')
+    for (const [, i] of late) {
+        assert.ok(y[i] > 0)
+        near(y[i], obj.actualStress.y[i] / capEnd * 100, 1e-9, `μ_SpC at ${x[i]} d`)
+    }
+})
+
 // Abb. 6.16 c: ε_sh,∞ = 0.00125, B = 10 d; at 28 d about 0.00092 (y grid 0.0004, reading ± 0.00002)
 test('Abb. 6.16 c: shrinkage strain ε_sh(28 d) ≈ 0.00092 (Gl. 6.16)', () => {
     near(shrinkageStrain(28), 0.00092, 0.00002, 'ε_sh(28 d)')
