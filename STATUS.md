@@ -2,7 +2,8 @@
 
 Stand: 2026-10-21, Version 2.0.0 veröffentlicht: PR #1 `web` → `main` als Merge-Commit 3d0c308, Tag `v2.0.0`,
 Produktion aus `main` unter https://groundcurve.onurkoc.net. `web` auf `main` nachgezogen (Fast-Forward) und bleibt
-Arbeitsbranch.
+Arbeitsbranch. Einstufiges LSC inkl. Kombination mit Ankern gegen Gschwandtners Excel (Abb. V-51) validiert
+(`docs/LSC-Analyse.md`, Abschnitt „Abgleich mit Gschwandtner (Excel), 2026-10-21").
 
 ## Erledigt
 
@@ -174,9 +175,12 @@ Offen gegenüber Entfellner:
 
 ## Offen nach Release 2.0.0
 
-1. **Excel-Vergleich LSC**: App gegen `references/Gschwandtner_Ausbaukennlinien_AbbV-51.xlsx` (Abb. V-51,
-   Ausbaukennlinien mit Stauchelement und Ankern) prüfen.
-2. **LSC mehrstufig** (Quelle: 3 Stufen, Anhang B: 600 / 700 / 1000 kN, 70 / 60 / 50 mm).
+1. **LSC mehrstufig** (Quelle: 3 Stufen, Anhang B: 600 / 700 / 1000 kN, 70 / 60 / 50 mm). Einstufig ist
+   erledigt: Excel-Vergleich (`references/Gschwandtner_Ausbaukennlinien_AbbV-51.xlsx`, einstufig gestellt) am
+   2026-10-21 bestätigt p_LSC, Plateaulänge, p_max SpC, Anker und Kombination (`docs/LSC-Analyse.md`).
+2. **Option Spritzbetonsteifigkeit nach Gschwandtner Gl. 2-9 D** (exakter dickwandiger Zylinder) statt Hoek:
+   Excel 79,0820 MPa/m, App 78,5655 MPa/m (−0,7 %). Entscheid Onur 2026-10-21: vorerst Hoek beibehalten,
+   Umstellung eventuell später.
 3. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
 4. **t1 nach Entfellner Gl. 6.18** (t1 = RL / AR · Δt): in der App 0 (Belastung sofort beim Einbau).

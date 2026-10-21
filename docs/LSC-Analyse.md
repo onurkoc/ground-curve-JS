@@ -107,3 +107,34 @@ Jeder Schritt mit eigenem Commit und Tests. Golden Values nur nach ausdrücklich
 
 Die Normalsteifigkeit der Quelle (Gl. V-40 bzw. 2-9 D: K_SN = E(r_A² − r_i²) / ((1 + ν)((1 − 2ν) r_A² + r_i²)), p = K_SN · u / r_A)
 unterscheidet sich formal von Hoeks Gleichung in der App. Für Anhang B: Quelle 79,1 MPa/m, App 78,6 MPa/m (−0,6 %).
+
+## Abgleich mit Gschwandtner (Excel), 2026-10-21
+
+Excel: `references/Gschwandtner_Ausbaukennlinien_AbbV-51.xlsx` (nicht im Repo, `references/` in `.gitignore`),
+einstufig gestellt: F2 = F3 = F1 = 600 kN, l2 = l3 = 0, l1 = 70 mm, E_A = 207 000 MPa.
+
+App: `groundCurve()` mit den Defaults aus `tests/helpers.js` und den Ausbauwerten unten, F_LSC = 600 kN/m,
+`l_yield` = 7 cm (die App erwartet den tangentialen Stauchweg in cm). Werte aus der 28-Tage-Kennlinie
+(linear-elastisch / ideal-plastisch, `supportComponents`, `supportCurve`).
+
+Ausbauwerte: D 11 m, t_c 0,15 m, E_c 15 000 MPa, ν_c 0,2, f_ck 25 MPa; Anker d_b 0,02 m, l_b 10 m,
+s_l = s_r = 1 m, t_bf 172,79 kN.
+
+| Größe | App | Excel | Abweichung |
+|---|---|---|---|
+| Plateau LSC p_LSC [MPa] | 0,1106 | 0,1106 | – |
+| Plateaulänge Δu = l/2π [mm] | 11,14 | 11,14 | – |
+| p_max Spritzbeton [MPa] | 0,6725 | 0,6725 | – |
+| p_max Anker [MPa] | 0,1728 | 0,1728 | – |
+| Steigung Anker [MPa/m] | 6,5031 | 6,5031 | – |
+| Kombination Maximum [MPa] | 0,8453 | 0,8453 | – |
+| Steigung Spritzbeton [MPa/m] | 78,5655 | 79,0820 | −0,7 % |
+
+Ursache der −0,7 %: Die App rechnet die Spritzbetonsteifigkeit nach Hoek (*Rock-Support Interaction*, wie
+RocSupport), K = E_c (r_o² − (r_o − t_c)²) / (2 (1 − ν_c²) (r_o − t_c) r_o²); das Excel nach Gschwandtner
+Gl. 2-9 D (exakter dickwandiger Zylinder, siehe *Nebenbefund*).
+
+**Entscheid Onur (2026-10-21):** vorerst Hoek beibehalten; Umstellung auf Gl. 2-9 D eventuell später.
+
+Damit ist das einstufige LSC einschließlich der Kombination mit Ankern (Drücke bei gleichem u addiert,
+Gl. V-50) bestätigt. Offen: mehrstufiges LSC.
