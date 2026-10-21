@@ -110,8 +110,11 @@ export function shrinkageStrain(tDays) {
 // Written in days: t_h^0.25 · 113 = t_d^0.25 · 24^0.25 · 113 ≈ t_d^0.25 · 250 (250.1).
 // The angle is taken in degrees: only then Abb. 6.16 d is reproduced (maximum 60·10⁻⁶ at about
 // 0.27 d, ≈ 0 at 4 d); the text of the source says radians.
+// Only applied for a concrete age 0 ≤ t ≤ 96 h (source, note to Gl. 6.17); afterwards
+// ε_t = ε_t(96 h) stays constant (no further change, so no further stress from temperature).
+export const TEMPERATURE_STRAIN_END_DAYS = 4
 export function temperatureStrain(tDays) {
-    const theta = tDays ** 0.25 * 250
+    const theta = Math.min(tDays, TEMPERATURE_STRAIN_END_DAYS) ** 0.25 * 250
     return (-1 * Math.cos(Math.PI / 180 * theta) + 1) * 30 / 1000000
 }
 

@@ -37,6 +37,11 @@ test('Abb. 6.16 d: temperature strain maximum ≈ 60·10⁻⁶ at 0.25-0.3 d, �
     near(eMax, 60e-6, 2e-6, 'ε_t,max')
     assert.ok(tMax >= 0.25 && tMax <= 0.3, `t(ε_t,max) = ${tMax} d`)
     near(temperatureStrain(4), 0, 2e-6, 'ε_t(4 d)')
+    // only for 0 ≤ t ≤ 96 h; afterwards constant ε_t(96 h) (Abb. 6.16 d: ≈ 0 from 4 d to 6 d)
+    for (const tDays of [4.5, 5, 6, 28]) {
+        assert.equal(temperatureStrain(tDays), temperatureStrain(4), `ε_t(${tDays} d)`)
+        near(temperatureStrain(tDays), 0, 2e-6, `ε_t(${tDays} d)`)
+    }
     // Gl. 6.17 in hours with the factor 113, angle in degrees, gives the same curve; the app's factor
     // 250 for days is 113 · 24^0.25 = 250.1 rounded (difference < 0.1·10⁻⁶)
     for (const tDays of [0.1, 0.27, 1, 2, 3.5]) {
