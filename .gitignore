@@ -4,3 +4,7 @@ release-builds/
 Support Docs/
 .vite/
 *.orig
+
+# Copyrighted reference PDFs (local only, never commit)
+references/
+dist/

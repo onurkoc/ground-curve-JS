@@ -1,3 +1,69 @@
+What's new in Version 2.0.0 – web app (changes since v1.8.1):
+
+- Platform
+    - Electron removed; GroundCurve is a static web app (Vite 5, output in
+      dist/) hosted on Cloudflare Pages: https://groundcurve.onurkoc.net
+    - New scripts: npm run dev / build / preview / test
+    - public/_headers (no-cache for HTML, immutable /assets/*) and favicon
+    - v1.8.1 remains the last desktop (Electron) release
+
+- Verification (npm run test, node --test)
+    - Hoek "Rock-Support Interaction" Fig. 4/6/7/13 (ground curve, LDP,
+      shotcrete and bolts)
+    - RocSupport Verification Manual Problem 5 (plastic radius) and
+      RocSupport v4.005 comparison cases 1-3 (Duncan-Fama, dilation 0):
+      u_face, u_io, r_p, p_cr, p_max, u_eq, p_eq, FS within the output rounding
+    - Gschwandtner Anhang B (LSC force, yield path, p_max)
+    - Entfellner (2024) Abb. 6.16 (creep, shrinkage, temperature strain)
+    - Golden regression baseline in tests/golden/
+
+- Support characteristic curve
+    - Shotcrete and bolt curves built separately from u_io and added at equal
+      displacement (Gschwandtner Gl. V-50), with and without LSC; the old
+      combined curve (p_max and K added, one yield point) is removed
+    - Shotcrete and bolts linear-elastic / ideal-plastic after Hoek (Fig. 8,
+      14): unlimited plateau at p_max; FS (total) = sum of all p_max / p_eq
+      (Hoek eq. 13), FS (shotcrete), bolt utilisation, "shotcrete yielding" /
+      "bolts yielding"; FS (total) below 1.35 in red
+    - Equilibrium search over all segments including the plateaus (FS > 10 is
+      found); "no equilibrium - support capacity insufficient" otherwise
+
+- LSC (yielding elements) after Gschwandtner (2010)
+    - New input "LSC force" F_LSC [kN/m]: plateau pressure p_LSC = F_LSC / r_m
+      (Anhang D Gl. 2-10 D); bolts act independently of the yield path
+    - Rate of flow force-controlled: rise until sigma(t) = sigma_N =
+      F_LSC / t_c, constant sigma_N over the yield path, then rate of flow
+      from sigma_N; mu_SpC not capped at 100 % (overload band)
+
+- Physics fixes
+    - LDP under support pressure: u_im(p_i) with -(1 - 2 nu)(p_o - p_i)
+      (Hoek eq. 7) instead of -(1 - 2 nu) p_o; the sigma(t) / mu_SpC series
+      now reaches u_eq (it ended 0.2-0.6 mm before). Also present in desktop
+      v1.8.1 (commit 50780c8, lines 240-241 and 251-252)
+    - Temperature strain only up to a concrete age of 96 h (Entfellner, note
+      to Gl. 6.17), constant afterwards
+    - Shotcrete strength constant beyond 28 d for mu_SpC (before mu_SpC
+      dropped to 0 after 27.96 d)
+
+- UI
+    - Phone layout (<= 768 px): sidebar behind a "Parameters" button, results
+      box above the first chart, legend with curve names below the chart,
+      Enhanced plots stacked
+    - Basic legend as in RocSupport: u_face, u_support (u_io), u_final (u_eq)
+      in mm, p_eq; full hover at the equilibrium point
+    - Optional "Large strain (Vrakas & Anagnostou 2015)" ground curve (display
+      only); Print tab renamed to "Parameter"
+    - Labels: "Bolt Circumferential Spacing" (s_c after Hoek, was "Bolt Radial
+      Spacing"), "Installation distance from face" (was "SpC Distance");
+      full names as sidebar tooltips
+
+- Documentation
+    - README, DEPLOY.md, STATUS.md; LSC analysis vs. Gschwandtner in
+      docs/LSC-Analyse.md
+    - References corrected: Vlachopoulos & Diederichs 2009, Vrakas &
+      Anagnostou 2015, Moeller & Vermeer 2005 (TC28 Amsterdam), Gschwandtner
+      2010 for LSC, Entfellner 2024 for the rate-of-flow parameters
+
 What's new in Version 1.8.1:
 
 - Parameters

@@ -137,12 +137,40 @@ html, body, #app {
     opacity: 0.7;
 }
 
+.sidebar-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 8px;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: var(--color-text);
+    cursor: pointer;
+}
+
 .param-slider-row {
     padding: 4px 8px 6px;
 }
 
-/* ── Print panel ─────────────────────────────────────────────────────────── */
-.print-panel {
+/* Long label (e.g. "LSC force"): label on its own line, input spans the label column too */
+.param-row--stacked .param-label {
+    grid-column: 1 / -1;
+}
+
+.param-row--stacked .p-inputnumber {
+    grid-column: 1 / 3;
+}
+
+.param-help {
+    margin: -2px 8px 8px;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    color: var(--color-muted);
+}
+
+/* ── Parameter panel ─────────────────────────────────────────────────────── */
+.summary-panel {
     padding: 24px 28px;
     display: flex;
     flex-direction: column;
@@ -153,18 +181,18 @@ html, body, #app {
     overflow-y: auto;
 }
 
-.print-param-list {
+.summary-param-list {
     display: table;
     border-spacing: 0 3px;
     font-size: 0.88rem;
     color: var(--color-text);
 }
 
-.print-param-row {
+.summary-param-row {
     display: table-row;
 }
 
-.print-param-label {
+.summary-param-label {
     display: table-cell;
     padding-right: 12px;
     font-weight: 600;
@@ -173,7 +201,7 @@ html, body, #app {
     min-width: 200px;
 }
 
-.print-param-value {
+.summary-param-value {
     display: table-cell;
     padding-right: 6px;
     color: var(--color-text);
@@ -181,10 +209,143 @@ html, body, #app {
     font-variant-numeric: tabular-nums;
 }
 
-.print-param-unit {
+.summary-param-unit {
     display: table-cell;
     color: var(--color-muted);
     font-size: 0.78rem;
+}
+
+/* ── Phone layout (≤ 768 px) ─────────────────────────────────────────────── */
+.mobile-bar,
+.sidebar-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    :root {
+        --mobilebar-h: 44px;
+    }
+
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .mobile-bar {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        height: var(--mobilebar-h);
+        padding: 0 8px;
+        background: var(--color-sidebar);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .mobile-bar-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--color-text);
+        background: var(--color-hover);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    /* Sidebar becomes a drawer over the chart, closed by default */
+    .sidebar {
+        position: fixed;
+        top: var(--mobilebar-h);
+        bottom: 0;
+        left: 0;
+        z-index: 20;
+        width: min(320px, 88vw);
+        min-width: 0;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar.sidebar--open {
+        transform: none;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: var(--mobilebar-h) 0 0 0;
+        z-index: 15;
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    .chart-tab-content {
+        height: calc(100vh - var(--tabbar-h) - var(--mobilebar-h));
+        padding: 4px;
+        overflow-y: auto;
+        flex-direction: column;   /* results box above the chart */
+    }
+
+    /* Results box above the first chart (ResultsBox.vue), two columns */
+    .chart-tab-content > .results-box {
+        flex: none;
+        margin: 2px 2px 6px;
+        padding: 6px 10px;
+        background: var(--color-hover);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        color: var(--color-text);
+    }
+
+    .results-message {
+        margin: 0 0 4px;
+        font-weight: 600;
+        color: #b00000;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 12px;
+        margin: 0;
+    }
+
+    .results-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .results-item dt {
+        color: var(--color-muted);
+        white-space: nowrap;
+    }
+
+    .results-item dd {
+        margin: 0;
+        font-weight: 600;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .results-red {
+        color: red;
+    }
+
+    /* Enhanced: four stacked plots need more height than the screen; the tab scrolls */
+    .chart-tab-content > #graph {
+        flex: none;
+        height: 1150px !important;
+    }
+
+    .chart-tabs .p-tab {
+        padding: 0 12px !important;
+    }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
