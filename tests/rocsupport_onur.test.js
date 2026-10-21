@@ -5,7 +5,9 @@
 // FS is taken unrounded as p_max / p_eq (the app string has three decimals).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { run } from './helpers.js'
+import { run, ARG_ORDER } from './helpers.js'
+import { updateGraphic } from '../src/physics/groundCurveCalc.js'
+import { calls } from './stubs/plotly.js'
 
 const FALL_1 = {
     D: 10, gamma: 20, H: 350, E: 1800, nu: 0.3, c: 1500, phi: 23, dis_sup: 5, advance_rate: 2,
@@ -67,4 +69,23 @@ test('RocSupport Fall 3 (Nr.3, shotcrete): D 8 m, p0 10 MPa, d_face 2 m (app def
         ['u_face_mm', 32.66, 2], ['u_io_mm', 63.94, 2], ['r_p_m', 7.92, 2], ['p_max', 1.463, 3],
         ['u_eq_mm', 67.03, 2], ['p_eq', 1.28, 2], ['FS', 1.14, 2]
     ])
+})
+
+// Basic legend and hover at the equilibrium show the RocSupport output quantities (mm, 2 decimals)
+test('RocSupport Fall 3: Basic legend u_face 32.66 / u_support 63.94 / u_final 67.03 mm, FS 1.14; full hover', () => {
+    calls.length = 0
+    updateGraphic(...ARG_ORDER.map(k => FALL_3[k]), {})
+    const basic = calls.find(c => c.id === 'graphBasic')
+    const names = basic.data.map(t => t.name ?? '')
+    for (const entry of ['u_face: 32.66 mm', 'u_support: 63.94 mm', 'u_final: 67.03 mm', 'p_eq: 1.28 MPa']) {
+        assert.ok(names.includes(entry), `${entry} in ${JSON.stringify(names)}`)
+    }
+    assert.ok(names.some(n => /FS\. 1\.14/.test(n)), 'FS 1.14')
+    // hover target at the equilibrium (invisible, first trace) with the full values; the legend marker
+    // itself does not hover
+    const eq = basic.data.find(t => t.name === 'equilibrium')
+    assert.equal(basic.data.indexOf(eq), 0)
+    assert.equal(basic.data.find(t => /FS\. 1\.14/.test(t.name ?? '')).hoverinfo, 'skip')
+    assert.equal(eq.hovertemplate, 'u_eq = 67.03 mm<br>p_eq = 1.282 MPa<br>FS = 1.14<extra></extra>')
+    for (const c of calls) assert.equal(c.layout.hoverlabel.namelength, -1)
 })

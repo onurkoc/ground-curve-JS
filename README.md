@@ -72,6 +72,10 @@ A web application for analytical pre-design of tunnel support using the **Conver
   Values above 100 % indicate overload; the rate-of-flow method does not limit stress to strength.
   Above 100 %: red dashed line and shaded band
 - **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments including the plateaus are searched, so FS > 10 is found as well)
+- **Basic legend** — R_p, u_face (displacement at the face), u_support (at support installation, u_io),
+  u_final (at the equilibrium, u_eq) in mm and p_eq (mobilised support pressure) in MPa, as in the RocSupport
+  output; "–" when there is no equilibrium. Hovering the equilibrium point shows u_eq, p_eq and FS in full
+  (hover names are never cut)
 - **Parameter tab** — summary of all 20 input parameters with units
 - **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
 

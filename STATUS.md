@@ -5,7 +5,7 @@ Stand: 2026-10-21, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 36 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 38 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
@@ -19,6 +19,9 @@ Stand: 2026-10-21, Branch `web` (nicht gemergt).
   - Golden Values unter `tests/golden/`: Werte aus der App selbst, keine Quellenwerte; zuletzt mit Entscheid 2
     (ideal-plastisch) neu erzeugt.
 - Parameter-Tab, optionale Large-strain-Kurve (nur Darstellung), `public/_headers`, Favicon.
+- Basic-Legende wie RocSupport: u_face, u_support (u_io), u_final (u_eq) in mm, p_eq in MPa („–“ ohne Gleichgewicht);
+  Hover am Gleichgewichtspunkt mit u_eq, p_eq, FS; Trace-Namen im Hover nie gekürzt. Prüffall RocSupport Nr. 3
+  (`tests/rocsupport_onur.test.js`), Screenshots `desktop_basic_rocsupport_case3.png`, `phone_basic_rocsupport_case3.png`.
 - Handy-Layout (≤ 768 px): Seitenleiste einklappbar, Diagramm volle Breite, Legende unter dem Diagramm,
   keine Plotly-Werkzeugleiste, Enhanced-Tab mit vier untereinander liegenden Diagrammen (scrollbar).
 - LSC einstufig nach Gschwandtner (2010):

@@ -168,3 +168,10 @@ test('No support at all: message instead of empty plots, FS shown as "–"', () 
     }
     for (const shown of ['Org. LDP', 'Stress (target)']) assert.ok(names(graph).includes(shown), shown)
 })
+
+test('No equilibrium: Basic legend u_final and p_eq shown as "–"', () => {
+    const { graphBasic } = plots({ ...ROC_SPC, t_c: 0, t_bf: 0 })
+    assert.ok(names(graphBasic).includes('u_final: –'))
+    assert.ok(names(graphBasic).includes('p_eq: –'))
+    assert.ok(names(graphBasic).some(n => /^u_support: \d+\.\d\d mm$/.test(n)))
+})

@@ -593,7 +593,19 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         mode: 'markers', type: 'scatter',
         name: !noEquilibrium && Number(safety) < FS_RED_BELOW ? `<span style="color:red">${fsName}</span>` : fsName,
         marker: { color: 'green', size: 10 }, xaxis: 'x1', yaxis: 'y1',
-        ...(noEquilibrium ? { opacity: 0, hoverinfo: 'none', showlegend: true } : {})
+        // the hover at the equilibrium comes from eqHover below
+        ...(noEquilibrium ? { opacity: 0, hoverinfo: 'none', showlegend: true } : { hoverinfo: 'skip' })
+    }
+    // Hover target at the equilibrium point with the full values instead of the (possibly cut) trace
+    // name. It is the first trace: at the marker the ground and support curves are just as close, and
+    // Plotly then shows the first trace.
+    const eqHover = noEquilibrium ? null : {
+        x: [intersect.x], y: [intersect.y], mode: 'markers', type: 'scatter',
+        marker: { color: 'green', size: 24 }, opacity: 0, showlegend: false, xaxis: 'x1', yaxis: 'y1',
+        name: 'equilibrium',
+        hovertemplate: `u_eq = ${(intersect.x * 1000).toFixed(2)} mm<br>` +
+            `p_eq = ${intersect.y.toFixed(3)} MPa<br>` +
+            `${obj.supportComponents ? 'FS (total)' : 'FS'} = ${fsText}<extra></extra>`
     }
     const trace3_1 = {
         x: obj.criticalPoint.x, y: obj.criticalPoint.y,
@@ -606,11 +618,17 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         visible: true, showlegend: true, hoverinfo: 'none', opacity: 0,
         name: `R_p: ${obj.plasticRadius.y[0].toFixed(2)} m`
     }
-    const trace3_4 = {
+    // Basic legend: displacements in mm (2 decimals) as in RocSupport: at the face, at support
+    // installation (u_io) and final at the equilibrium (u_eq), plus the mobilised support pressure
+    const infoEntry = name => ({
         x: [0], y: [0], mode: 'markers', type: 'scatter',
-        visible: true, showlegend: true, hoverinfo: 'none', opacity: 0,
-        name: `u_face: ${obj.u_if.u_if.toFixed(3)} m`
-    }
+        visible: true, showlegend: true, hoverinfo: 'none', opacity: 0, name
+    })
+    const mm = u => `${(u * 1000).toFixed(2)} mm`
+    const trace3_4 = infoEntry(`u_face: ${mm(obj.u_if.u_if)}`)
+    const trace3_5 = infoEntry(`u_support: ${mm(obj.supportCurve.x[0])}`)
+    const trace3_6 = infoEntry(`u_final: ${noEquilibrium ? '–' : mm(intersect.x)}`)
+    const trace3_7 = infoEntry(`p_eq: ${noEquilibrium ? '–' : `${intersect.y.toFixed(2)} MPa`}`)
     const trace3_3 = {
         x: [0], y: [0], mode: 'markers', type: 'scatter',
         visible: true, showlegend: true, hoverinfo: 'none', opacity: 0,
@@ -618,7 +636,7 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     }
 
     const data = [trace1, trace2, trace3, trace3_1]
-    const dataBasic = [trace1, trace2, trace3, trace3_1, trace3_2, trace3_4]
+    const dataBasic = [trace1, trace2, trace3, trace3_1, trace3_2, trace3_4, trace3_5, trace3_6, trace3_7]
     const legendOnly = name => ({
         x: [0], y: [0], mode: 'markers', type: 'scatter',
         visible: true, showlegend: true, hoverinfo: 'none', opacity: 0, name
@@ -668,6 +686,10 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     if (options.showLargeStrain) {
         data.splice(1, 0, trace1_1)
         dataBasic.splice(1, 0, trace1_1)
+    }
+    if (eqHover) {
+        data.unshift(eqHover)
+        dataBasic.unshift(eqHover)
     }
 
     let verticalLines = []
@@ -761,7 +783,7 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const layout = {
         title: { text: 'Ground Reaction Curve', font: { size: 18 } }, plot_bgcolor: '#f9f7f7', showlegend: true,
         margin: { l: 60, r: 30, b: 60, t: 50, pad: 4 },
-        autosize: true, hovermode: 'closest',
+        autosize: true, hovermode: 'closest', hoverlabel: { namelength: -1 },   // never cut trace names
         xaxis: { rangemode: 'normal', title: { text: 'Tunnel Wall Displacement [m]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', range: [0, maxX], tickformat: '.3f', domain: [0, 0.47], anchor: 'y2' },
         xaxis2: { title: { text: 'Time [days]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', tickformat: '.2f', domain: [0.55, 1], anchor: 'y4' },
         yaxis: { tickformat: '.1f', title: { text: 'Support Pressure [MPa]', font: { family: 'Arial, sans-serif', size: 13 } }, color: 'black', range: [0, maxY], domain: [0.55, 1], rangemode: 'nonnegative' },
@@ -775,7 +797,7 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const layoutBasic = {
         title: { text: 'Ground Reaction Curve', font: { size: 18 } }, plot_bgcolor: '#f9f7f7', showlegend: true,
         margin: { l: 60, r: 30, b: 60, t: 50, pad: 4 },
-        autosize: true, hovermode: 'closest',
+        autosize: true, hovermode: 'closest', hoverlabel: { namelength: -1 },   // never cut trace names
         xaxis: { rangemode: 'nonnegative', title: { text: 'Tunnel Wall Displacement [m]', font: { family: 'Arial, sans-serif', size: 14 } }, color: 'black', range: [0, maxX], tickformat: '.3f' },
         yaxis: { scaleratio: 0.4, tickformat: '.1f', title: { text: 'Support Pressure [MPa]', font: { family: 'Arial, sans-serif', size: 14 } }, color: 'black', range: [0, maxY], rangemode: 'nonnegative' },
         legend: { traceorder: 'normal', font: { family: 'Arial, sans-serif', size: 16, color: '#000' }, bgcolor: '#E2E2E2', bordercolor: '#FFFFFF', borderwidth: 1.7, x: 0.99, xanchor: 'right', y: 0.99 }
