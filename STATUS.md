@@ -35,18 +35,30 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
     der u_im-Korrektur und mit dem inzwischen entfernten Untertitel).
   - Eingabe „LSC force" (F_LSC) und „LSC" mit Hilfetext in der Seitenleiste. Der Hinweis „FS aus
     28-Tage-Kennlinie, σ(t)/μ_SpC aus Fließratenmethode" steht im README unter LSC (nicht mehr im Diagramm).
-- Kein Gleichgewicht (Ausbau insgesamt zu schwach): FS „–", Meldung „no equilibrium – support capacity
-  insufficient" im Basic- und Enhanced-Tab; LDP, σ und μ_SpC ausgeblendet mit derselben Meldung.
-  Prüffall A (`tests/equilibrium.test.js`): D 11 m, f_ck 25 MPa, E_c 15000 MPa, t_c 0,15 m, LSC 7 cm,
-  F_LSC 600 kN/m, T_bf 173 kN, s_l = s_r 1 m, d_b 0,02 m, l_b 10 m, γ 20, H 500, sonst App-Standard.
-  p_max,gesamt 0,8455 MPa (SpC 0,6725 + Anker 0,173) bei u 0,10435 m; Gebirgskennlinie dort 0,9990 MPa,
-  erreicht 0,8455 MPa erst bei u 0,1121 m. Kein Schnittpunkt verworfen, keine Konsolenfehler.
-  Screenshot `docs/screenshots/web/desktop_enhanced_no_equilibrium_caseA.png`.
-- Gleichgewicht nach p_max,SpC (nur die Anker steigen noch): Legende (Basic und Enhanced)
-  „shotcrete at p_max (plastic) – limit state". Prüffall B (wie A, γ 18,3, H 443): u_eq 0,07622 m auf dem
-  Abschnitt 0,07460 → 0,08150 m, FS (total) 1,042, FS (shotcrete) 1,00, Anker 80 %. Nur das flache
-  Darstellungs-Endstück nach dem letzten Knick ist von der Schnittpunktsuche ausgenommen.
-  Screenshot `docs/screenshots/web/desktop_enhanced_shotcrete_limit_caseB.png`.
+- Kein Gleichgewicht: FS „–", Meldung im Basic- und Enhanced-Tab; New LDP, Stress (actual), μ_SpC und die
+  80-%-/100-%-Linien ausgeblendet, Org. LDP und Stress (target) bleiben. Zwei Meldungen (Entscheid (b)):
+  - „no equilibrium – shotcrete fails (p_max reached)": bis p_max,SpC kein Schnittpunkt, die Summe mit
+    weiter steigenden Ankern würde die Gebirgskennlinie noch erreichen. Prüffall B (wie A, γ 18,3, H 443):
+    Kennlinienende u 0,07460 m, p 0,8006 MPa, Gebirgsdruck dort 0,8550 MPa (vorher Gleichgewicht nach
+    p_max,SpC bei u 0,07622 m mit FS 1,042). Screenshot `docs/screenshots/web/desktop_enhanced_shotcrete_fails_caseB.png`.
+  - „no equilibrium – support capacity insufficient": auch die Summe aller p_max reicht nicht.
+    Prüffall A (`tests/equilibrium.test.js`): D 11 m, f_ck 25 MPa, E_c 15000 MPa, t_c 0,15 m, LSC 7 cm,
+    F_LSC 600 kN/m, T_bf 173 kN, s_l = s_r 1 m, d_b 0,02 m, l_b 10 m, γ 20, H 500, sonst App-Standard.
+    Summe aller p_max 0,8455 MPa (SpC 0,6725 + Anker 0,173); Gebirgsdruck bei u 0,10435 m (Anker bei p_max)
+    0,9990 MPa, erreicht 0,8455 MPa erst bei u 0,1121 m. Screenshot
+    `docs/screenshots/web/desktop_enhanced_no_equilibrium_caseA.png`.
+
+## Entscheide Onur (nach Vergleich mit RocSupport)
+
+- **(a) Kombination Spritzbeton + Anker:** immer getrennte Kurven ab u_io, Drücke bei gleichem u addiert
+  (Gschwandtner Gl. V-50), auch ohne LSC. Der alte Pfad „p_max und K addieren, ein gemeinsamer Fließpunkt"
+  ist entfallen. RocSupport kombiniert anders; kombinierte Ergebnisse sind nicht vergleichbar.
+- **(b) Spritzbeton bei p_max,SpC versagt:** kein Gleichgewicht danach, auch nicht mit Ankern. Die
+  Ausbaukennlinie endet bei p_max,SpC (mit LSC: Ende des Anstiegs nach dem Stauchweg; nur Anker: bei
+  p_max,bolt), kein waagerechtes Endstück. FS (total) = Ausbaudruck bei p_max,SpC / p_eq. Der Hinweis
+  „shotcrete at p_max (plastic) – limit state" ist entfallen.
+- **(c) σ(t) aus der Fließratenmethode wird nicht auf die Festigkeit begrenzt;** Überlastung (μ_SpC > 100 %)
+  wird nur angezeigt. Schließt den früheren offenen Punkt 4 (σ bis ≈ 43 MPa > f_ck in Fall B vor (b)).
 - Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
   (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
 - **Fehler korrigiert: LDP unter Stützdruck, Zeitreihe endete vor u_eq.**
@@ -88,11 +100,7 @@ Commit 799116f ohne ausdrücklichen Auftrag.
 2. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
 3. **Prüfung auf echtem Handy** (bisher nur Browser-Emulator 390 × 844).
-4. **σ(t) aus der Fließratenmethode ohne Festigkeitsgrenze**: Fall B (FS (shotcrete) = 1,00, Schale im
-   28-Tage-Modell bei p_max) zeigt nach dem Stauchweg σ bis ≈ 43 MPa > f_ck 25 MPa und μ_SpC max 193 %.
-   Die Fließratenmethode rechnet viskoelastisch weiter, ohne Plastizität bei σ = f(t). Klären, ob σ(t)
-   auf die Festigkeit σ_cap(t) begrenzt oder ab μ > 100 % nur als Überlastung angezeigt werden soll.
-5. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
+4. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
 
    Ende der Zeitreihe vor/nach der Korrektur:
 

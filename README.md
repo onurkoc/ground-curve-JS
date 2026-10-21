@@ -26,7 +26,14 @@ A web application for analytical pre-design of tunnel support using the **Conver
 - **Ground Reaction Curve (GRC)** — Mohr-Coulomb elasto-plastic solution (Hoek / Duncan-Fama formulation)
 - **Large strain (optional display)** — sidebar checkbox *Large strain (Vrakas & Anagnostou 2015)* overlays the large-strain ground curve in the Basic and Enhanced charts. Display only: equilibrium, FS and LDP are always computed with the small-strain solution.
 - **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2009)
-- **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek)
+- **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek).
+  Shotcrete and bolt curves are added at equal displacement (Gschwandtner Eq. V-50). Shotcrete reaching
+  p_max is treated as failure (no ideal-plastic plateau). RocSupport combines supports differently –
+  combined results are not comparable.
+  The support curve ends at p_max,SpC (bolts alone: at p_max,bolt). Without a crossing up to there the
+  charts show *no equilibrium – shotcrete fails (p_max reached)* (the bolts alone would still reach the
+  ground curve) or *no equilibrium – support capacity insufficient* (even the sum of all p_max is too small),
+  FS is shown as "–"
 - **LSC (Lining Stress Controller) support, single stage** — after Gschwandtner (2010). Inputs:
   - `LSC` = yield path of the element l_yield [cm], tangential (sum over the ring); radial u_gap = l_yield / 2π
   - `LSC force` (F_LSC) = ring force carried by the yielding element [kN per m tunnel], default 0
@@ -37,8 +44,10 @@ A web application for analytical pre-design of tunnel support using the **Conver
   F_LSC = 0 gives the open-slot model (zero shotcrete pressure until the gap is closed).
   The LSC yields only if p_LSC < p_max,SpC (shotcrete capacity alone).
   Bolts act independently of the yield path: shotcrete and bolt curves both start at u_io and their
-  pressures are added at equal displacement (Gschwandtner Gl. V-50, Abb. V-51); the components are drawn dotted.
-  Legend with LSC: *FS (total)* = p_max,total / p_eq, *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
+  pressures are added at equal displacement (Gschwandtner Gl. V-50, Abb. V-51); the components are drawn
+  dotted (also without LSC when shotcrete and bolts act together).
+  Legend: *FS (total)* = p_max,total / p_eq with p_max,total = support pressure at p_max,SpC (shotcrete
+  p_max plus the bolt pressure there), *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
   (on the plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt and, on the plateau,
   the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
 
@@ -51,8 +60,9 @@ A web application for analytical pre-design of tunnel support using the **Conver
   shrinkage and thermal terms counted from the start of loading. Start and end of yielding are found in the
   time series and can differ from the 28-day support curve used for FS (see the note under LSC)
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35).
-  Not capped: values above 100 % (red dashed line, shaded band) mean the young shotcrete is overloaded
-- **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments are searched, so FS > 10 is found as well)
+  Values above 100 % indicate overload; the rate-of-flow method does not limit stress to strength.
+  Above 100 %: red dashed line and shaded band
+- **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments up to p_max,SpC are searched, so FS > 10 is found as well)
 - **Parameter tab** — summary of all 20 input parameters with units
 - **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
 
