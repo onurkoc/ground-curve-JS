@@ -1,89 +1,42 @@
 # Status
 
-Stand: 2026-10-16, Branch `web` (nicht gemergt).
+Stand: 2026-10-21, Branch `web` (nicht gemergt).
 
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 26 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 28 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
   - Gschwandtner Anhang B (LSC): p_LSC 0,1106 MPa, Δu 11,14 mm, p_max 0,6725 MPa.
-  - Golden Values unter `tests/golden/`: alle sechs Sets mit der u_im(p_i)-Korrektur neu erzeugt
-    (nur LDP, σ(t), μ_SpC, `lsc.yieldRateOfFlow` geändert); Werte aus der App selbst, keine Quellenwerte.
+  - RocSupport-Vergleich nur Spritzbeton (D 11 m, siehe unten): u_eq 81,76 mm wie RocSupport.
+  - Golden Values unter `tests/golden/`: Werte aus der App selbst, keine Quellenwerte; zuletzt mit Entscheid 2
+    (ideal-plastisch) neu erzeugt.
 - Parameter-Tab, optionale Large-strain-Kurve (nur Darstellung), `public/_headers`, Favicon.
 - Handy-Layout (≤ 768 px): Seitenleiste einklappbar, Diagramm volle Breite, Legende unter dem Diagramm,
   keine Plotly-Werkzeugleiste, Enhanced-Tab mit vier untereinander liegenden Diagrammen (scrollbar).
-  Desktop unverändert (Basic/Enhanced bei 1400 px pixelgleich).
 - LSC einstufig nach Gschwandtner (2010):
-  - Eingabe **F_LSC [kN/m]** (Ringnormalkraft je m Tunnel während der Stauchung),
-    p_LSC = F_LSC / r_m, r_m = D/2 − t_c/2 (Anhang D Gl. 2-10 D); Stauchen nur, wenn p_LSC < p_max,SpC.
-  - Spritzbeton- und Ankerkennlinie getrennt ab u_io, Anker nicht um u_gap verschoben, Summe der Drücke
-    bei gleichem u (Gl. V-50, Abb. V-51).
+  - Eingabe „LSC force" (F_LSC [kN/m], Ringnormalkraft je m Tunnel während der Stauchung) und „LSC"
+    (Stauchweg) mit Hilfetext in der Seitenleiste; p_LSC = F_LSC / r_m, r_m = D/2 − t_c/2 (Anhang D Gl. 2-10 D);
+    Stauchen nur, wenn p_LSC < p_max,SpC.
   - Ausgaben: FS (total), FS (shotcrete), Anker-Auslastung, im Plateau verbleibender Stauchweg (tangential, mm).
   - Rate-of-Flow kraftgesteuert in drei Phasen: Anstieg ab 0 mit der Fließratenmethode (wie ohne LSC), bis
     σ(t) = σ_N = F_LSC / t_c; ab diesem Punkt u_ys konstant σ_N (S. 56) bis u_ys + u_gap, beides in der
     Zeitreihe bestimmt (nicht aus u_lsc bzw. Ende Stauchweg der 28-Tage-Kennlinie); danach Fließratenmethode
     weiter ab σ_N. Wird σ_N nie erreicht, staucht das Element nicht. Beginn/Ende { t, u } in
     `lsc.yieldRateOfFlow`. Kriechen, Schwinden und Temperatur zählen ab Belastungsbeginn (siehe *Zu prüfen* unten).
-  - μ_SpC wird nicht mehr bei 100 % begrenzt; rote Strichlinie bei 100 %, rotes Band darüber,
-    Legende „> 100 %: overloaded (max … %)", Achse in ganzen Prozent.
-  - Enhanced-Tab bei F_LSC > 0 mit Untertitel: „FS from 28-day elastic support curve; σ(t) and μ_SpC from
-    rate-of-flow method – yield path start/end can differ between both."
-  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px).
-- Screenshots unter `docs/screenshots/web/` auf dem Stand der Entscheide (a)–(c) neu erzeugt (Desktop Basic/
-  Enhanced, mit Large strain, Handy Basic/Enhanced/unten/Seitenleiste, Fälle A, B, C); `desktop_parameter.png`
-  und `phone_parameter.png` unverändert (Parameter-Tab nicht betroffen).
-  - Eingabe „LSC force" (F_LSC) und „LSC" mit Hilfetext in der Seitenleiste. Der Hinweis „FS aus
-    28-Tage-Kennlinie, σ(t)/μ_SpC aus Fließratenmethode" steht im README unter LSC (nicht mehr im Diagramm).
-- Kein Gleichgewicht: FS „–", Meldung im Basic- und Enhanced-Tab; New LDP, Stress (actual), μ_SpC und die
-  80-%-/100-%-Linien ausgeblendet, Org. LDP und Stress (target) bleiben. Zwei Meldungen (Entscheid (b)):
-  - „no equilibrium – shotcrete fails (p_max reached)": bis p_max,SpC kein Schnittpunkt, die Summe mit
-    weiter steigenden Ankern würde die Gebirgskennlinie noch erreichen. Prüffall B (wie A, γ 18,3, H 443):
-    Kennlinienende u 0,07460 m, p 0,8006 MPa, Gebirgsdruck dort 0,8550 MPa (vorher Gleichgewicht nach
-    p_max,SpC bei u 0,07622 m mit FS 1,042). Screenshot `docs/screenshots/web/desktop_enhanced_shotcrete_fails_caseB.png`.
-  - „no equilibrium – support capacity insufficient": auch die Summe aller p_max reicht nicht.
-    Prüffall A (`tests/equilibrium.test.js`): D 11 m, f_ck 25 MPa, E_c 15000 MPa, t_c 0,15 m, LSC 7 cm,
-    F_LSC 600 kN/m, T_bf 173 kN, s_l = s_r 1 m, d_b 0,02 m, l_b 10 m, γ 20, H 500, sonst App-Standard.
-    Summe aller p_max 0,8455 MPa (SpC 0,6725 + Anker 0,173); Gebirgsdruck bei u 0,10435 m (Anker bei p_max)
-    0,9990 MPa, erreicht 0,8455 MPa erst bei u 0,1121 m. Screenshot
-    `docs/screenshots/web/desktop_enhanced_no_equilibrium_caseA.png`.
-
-## Entscheide Onur (nach Vergleich mit RocSupport)
-
-- **(a) Kombination Spritzbeton + Anker:** immer getrennte Kurven ab u_io, Drücke bei gleichem u addiert
-  (Gschwandtner Gl. V-50), auch ohne LSC. Der alte Pfad „p_max und K addieren, ein gemeinsamer Fließpunkt"
-  ist entfallen. RocSupport kombiniert anders; kombinierte Ergebnisse sind nicht vergleichbar.
-- **(b) Spritzbeton bei p_max,SpC versagt:** kein Gleichgewicht danach, auch nicht mit Ankern. Die
-  Ausbaukennlinie endet bei p_max,SpC (mit LSC: Ende des Anstiegs nach dem Stauchweg; nur Anker: bei
-  p_max,bolt), kein waagerechtes Endstück. FS (total) = Ausbaudruck bei p_max,SpC / p_eq. Der Hinweis
-  „shotcrete at p_max (plastic) – limit state" ist entfallen.
-- **(c) σ(t) aus der Fließratenmethode wird nicht auf die Festigkeit begrenzt;** Überlastung (μ_SpC > 100 %)
-  wird nur angezeigt. Schließt den früheren offenen Punkt 4 (σ bis ≈ 43 MPa > f_ck in Fall B vor (b)).
-
-Auswirkung (a) + (b), Stand 942ecd5 → jetzt (u_eq [m] / p_eq [MPa] / FS):
-
-| Fall | alt | neu |
-|---|---|---|
-| Golden `defaults`, `rateOfFlow` | 0,06689 / 1,2869 / 1,201 | 0,06689 / 1,2869 / 1,194 |
-| Golden `lsc` | 0,09680 / 0,5111 / 3,024 | unverändert |
-| Golden `lscForce600` | 0,09699 / 0,5075 / 2,882 | unverändert |
-| Golden `lscForce2400Plateau` | 0,09156 / 0,6154 / 2,377 | unverändert |
-| Golden `lscLongPlateau` | 0,11928 / 0,1538 / 9,506 | unverändert |
-| Vergleichsfall D 11 m, T_bf 400 kN, ohne LSC | 0,06747 / 1,0695 / 1,003 | no equilibrium – shotcrete fails |
-| Fall A | no equilibrium | no equilibrium – support capacity insufficient |
-| Fall B | 0,07622 / 0,8112 / 1,042 | no equilibrium – shotcrete fails |
-| Fall C | 0,08772 / 0,6987 / 2,212 | unverändert |
-| Hoek Spritzbeton / Anker / d_face 12 m | 3,35 / 1,015 / 14,463 | unverändert (Prüfgrößen bitgleich) |
-| RocSupport Problem 5 (r_pm geprüft; Ausbau = App-Standard) | FS 8,233 / 13,135 / 8,700 / 14,226 | FS 8,132 / 12,972 / 8,592 / 14,050 |
-
-Alle sechs Golden-Sets geändert: `supportCurve` (kein waagerechtes Endstück, ohne LSC getrennte Kurven);
-`defaults` und `rateOfFlow` zusätzlich FS (Ausbaudruck bei p_max,SpC 1,5362 statt Summe aller p_max 1,5458 MPa,
-die Anker erreichen p_max erst nach 3,99 mm, der Spritzbeton nach 3,53 mm). u_eq und p_eq unverändert,
-weil die Summe bis zum ersten p_max dieselbe Gerade ist wie die alte kombinierte Kennlinie.
-- Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
-  (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
+  - Der Hinweis „FS aus 28-Tage-Kennlinie, σ(t)/μ_SpC aus Fließratenmethode" steht im README unter LSC.
+- μ_SpC nicht bei 100 % begrenzt; rote Strichlinie bei 100 %, rotes Band darüber, Legende
+  „> 100 %: overloaded (max … %)", Achse in ganzen Prozent.
+- Ausbaukennlinie und Gleichgewicht nach Entscheid 2 (siehe unten): Spritzbeton und Anker ideal-plastisch mit
+  unbegrenztem Plateau, Überlagerung bei gleichem u, FS (total) nach Hoek Gl. (13), Legende „shotcrete yielding" /
+  „bolts yielding", FS (total) < 1,35 rot.
+- Kein Gleichgewicht nur, wenn die Gebirgskennlinie auf ganzer Länge über der Gesamtkurve liegt (praktisch nur
+  ohne Ausbau): FS „–", Meldung „no equilibrium – support capacity insufficient" im Basic- und Enhanced-Tab;
+  New LDP, Stress (actual), μ_SpC und die 80-%-/100-%-Linien ausgeblendet, Org. LDP und Stress (target) bleiben.
+- Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0, Plateaus eingeschlossen: FS > 10 wird
+  gefunden (Hoek-Fall mit d_face 12 m: FS 14,46).
 - **Fehler korrigiert: LDP unter Stützdruck, Zeitreihe endete vor u_eq.**
   - Fehler: u_im(p_i) der LDPs für die Zeitzuordnung (`u_im_updated`, `u_im_inc`) hatte den zweiten Term
     −(1 − 2ν)·p_o (nur für p_i = 0 gültig). Die LDP lag um r_o(1 + ν)(1 − 2ν)·p_i / E unter der
@@ -96,6 +49,60 @@ weil die Summe bis zum ersten p_max dieselbe Gerade ist wie die alte kombinierte
   - Bitgleich geblieben: FS, u_eq, p_eq, Gebirgs- und Ausbaukennlinie, Hoek- und RocSupport-Prüfgrößen.
   - Desktop v1.8.1 (Tag `v1.8.1`, Commit 50780c8) hat denselben Fehler
     (`src/physics/groundCurveCalc.js` Z. 240–241 und 251–252).
+- Screenshots unter `docs/screenshots/web/` auf dem Stand von Entscheid 2 (Standard Desktop/Handy, mit Large
+  strain, Fälle A, B, C, RocSupport-Vergleich mit/ohne Anker); `desktop_parameter.png`, `phone_parameter.png`
+  und `phone_sidebar_open.png` unverändert.
+
+## Entscheide Onur
+
+### Entscheid 1 (2026-10-21, nach Vergleich mit RocSupport)
+
+- **(a) Kombination Spritzbeton + Anker:** immer getrennte Kurven ab u_io, Drücke bei gleichem u addiert
+  (Gschwandtner Gl. V-50), auch ohne LSC. Der alte Pfad „p_max und K addieren, ein gemeinsamer Fließpunkt"
+  ist entfallen. RocSupport kombiniert anders; kombinierte Ergebnisse sind nicht vergleichbar. *Gilt weiter.*
+- ~~**(b) Spritzbeton bei p_max,SpC versagt:** kein Gleichgewicht danach, auch nicht mit Ankern; Ausbaukennlinie
+  endet bei p_max,SpC; FS (total) = Ausbaudruck bei p_max,SpC / p_eq.~~ **Ersetzt durch Entscheid 2** (2026-10-21).
+- **(c) σ(t) aus der Fließratenmethode wird nicht auf die Festigkeit begrenzt;** Überlastung (μ_SpC > 100 %)
+  wird nur angezeigt. *Gilt weiter.*
+
+### Entscheid 2 (2026-10-21, ersetzt Entscheid 1 (b))
+
+- **(a)** Spritzbeton und Anker linear-elastisch / ideal-plastisch nach Hoek (Fig. 8, Fig. 14): nach p_max
+  waagerechtes Plateau, unbegrenzt (dargestellt bis zum Ende der Gebirgskennlinie). Kein Versagen bei p_max.
+- **(b)** Kombination: Überlagerung beider Kennlinien bei gleichem u (Gschwandtner Gl. V-50), jede Komponente
+  mit eigenem Plateau; Gesamtkurve stückweise linear bis zur Summe aller p_max, danach waagerecht.
+- **(c)** FS nach Hoek Gl. (13): FS (total) = p_max,gesamt / p_eq (Summe aller p_max); FS (shotcrete) =
+  p_max,SpC / p_SpC(u_eq); Anker-Auslastung = p_Anker(u_eq) / p_max,Anker. Komponente auf dem Plateau:
+  Legende „shotcrete yielding" bzw. „bolts yielding". FS (total) < 1,35 in der Legende rot (nur Darstellung).
+- **(d)** Gilt auch für reinen Spritzbeton- bzw. reinen Ankerausbau und mit LSC (Plateau des Spritzbetons nach
+  dem letzten Anstieg).
+
+Auswirkung, Stand 2bd77d8 (Entscheid 1 (b)) → Entscheid 2
+(u_eq [mm] / p_eq [MPa] / FS (total) / FS (shotcrete) / Anker-Auslastung):
+
+| Fall | 2bd77d8 | Entscheid 2 |
+|---|---|---|
+| Standard (Golden `defaults`, `rateOfFlow`) | 66,89 / 1,2869 / 1,194 / 1,19 / 74 % | 66,89 / 1,2869 / 1,201 / 1,19 / 74 % |
+| Fall A | no equilibrium – capacity insufficient | 112,16 / 0,8455 / 1,000 / 1,00 / 100 %, beide yielding |
+| Fall B | no equilibrium – shotcrete fails | 76,22 / 0,8112 / 1,042 / 1,00 / 80 %, shotcrete yielding |
+| Fall C | 87,72 / 0,6987 / 2,212 / 2,38 / 100 % | unverändert (bolts yielding) |
+| RocSupport-Vergleich nur Spritzbeton | no equilibrium – capacity insufficient | 81,76 / 0,6725 / 1,000 / – / –, shotcrete yielding |
+| RocSupport-Vergleich mit Ankern (T_bf 400 kN) | no equilibrium – shotcrete fails | 76,22 / 0,8112 / 1,322 / 1,00 / 35 %, shotcrete yielding |
+| Golden `lsc`, `lscForce600`, `lscForce2400Plateau` | 3,024 / 2,882 / 2,377 | FS unverändert, nur `supportCurve` (Plateau) |
+| Golden `lscLongPlateau` | 9,506 | bitgleich (Spritzbeton erreicht p_max erst nach dem Ende der Gebirgskennlinie) |
+| Hoek Spritzbeton / Anker / d_face 12 m | 3,35 / 1,015 / 14,463 | unverändert, Prüfgrößen bitgleich |
+| RocSupport Problem 5 (r_pm geprüft; Ausbau = App-Standard) | FS 8,132 / 12,972 / 8,592 / 14,050 | FS 8,233 / 13,135 / 8,700 / 14,226 |
+
+RocSupport-Vergleich (γ 18,3, H 443, ν 0,3, E 1050 MPa, c 1000 kPa, φ 28°, D 11 m, f_ck 25, E_c 15000, ν_c 0,2,
+t_c 0,15, d_face 2, Vortrieb 2, ohne LSC):
+
+- Nur Spritzbeton: RocSupport u_eq 81,76 mm, FS 0,64; App u_eq 81,76 mm, FS 1,00. Gleichgewicht auf dem Plateau
+  (p_eq = p_max,SpC 0,6725 MPa). RocSupport verlängert bei fließendem Ausbau die elastische Gerade bis zur
+  Gebirgskennlinie (p = 1,0455 MPa) und gibt FS = p_max / p = 0,643; die App nach Hoek Gl. (13)
+  FS = p_max / p_eq = 1. Nachgerechnet in `tests/equilibrium.test.js`; im RocSupport-Handbuch nicht nachgelesen.
+- Mit Ankern (T_bf 400 kN, s_l = s_r = 1 m, d_b 0,02 m, l_b 10 m): RocSupport u_eq 86,89 mm, FS 1,92; App
+  u_eq 76,22 mm, FS 1,322 (andere Kombinationsregel, nur zur Information).
+
 
 ## Zu prüfen: von Onur gegen Aldrian/Entfellner zu prüfen
 

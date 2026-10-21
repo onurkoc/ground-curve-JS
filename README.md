@@ -27,13 +27,17 @@ A web application for analytical pre-design of tunnel support using the **Conver
 - **Large strain (optional display)** — sidebar checkbox *Large strain (Vrakas & Anagnostou 2015)* overlays the large-strain ground curve in the Basic and Enhanced charts. Display only: equilibrium, FS and LDP are always computed with the small-strain solution.
 - **Longitudinal Displacement Profile (LDP)** — Vlachopoulos & Diederichs (2009)
 - **Support Characteristic Curve (SCC)** — thick-walled cylinder shotcrete + rock bolt stiffness (Hoek).
-  Shotcrete and bolt curves are added at equal displacement (Gschwandtner Eq. V-50). Shotcrete reaching
-  p_max is treated as failure (no ideal-plastic plateau). RocSupport combines supports differently –
-  combined results are not comparable.
-  The support curve ends at p_max,SpC (bolts alone: at p_max,bolt). Without a crossing up to there the
-  charts show *no equilibrium – shotcrete fails (p_max reached)* (the bolts alone would still reach the
-  ground curve) or *no equilibrium – support capacity insufficient* (even the sum of all p_max is too small),
-  FS is shown as "–"
+  Shotcrete and bolts are linear-elastic / ideal-plastic (Hoek, Fig. 8 and 14): after p_max each keeps
+  p_max on a horizontal plateau, without limit (drawn to the end of the ground curve). This holds for
+  shotcrete or bolts alone, for both together and with LSC (shotcrete plateau after the last rise).
+  Shotcrete and bolt curves are added at equal displacement (Gschwandtner Eq. V-50), each with its own
+  plateau; the total curve is piecewise linear up to the sum of all p_max and horizontal after that.
+  RocSupport combines supports differently – combined results are not comparable. For a single support on
+  its plateau RocSupport gives the same u_eq but FS = p_max / p at the extended elastic line (e.g. 0.64
+  instead of 1.00).
+  *No equilibrium – support capacity insufficient* (FS "–") only if the ground curve lies above the
+  total curve over its whole length.
+  (Replaces the rule of 2026-10-21 "shotcrete reaching p_max is treated as failure".)
 - **LSC (Lining Stress Controller) support, single stage** — after Gschwandtner (2010). Inputs:
   - `LSC` = yield path of the element l_yield [cm], tangential (sum over the ring); radial u_gap = l_yield / 2π
   - `LSC force` (F_LSC) = ring force carried by the yielding element [kN per m tunnel], default 0
@@ -46,10 +50,11 @@ A web application for analytical pre-design of tunnel support using the **Conver
   Bolts act independently of the yield path: shotcrete and bolt curves both start at u_io and their
   pressures are added at equal displacement (Gschwandtner Gl. V-50, Abb. V-51); the components are drawn
   dotted (also without LSC when shotcrete and bolts act together).
-  Legend: *FS (total)* = p_max,total / p_eq with p_max,total = support pressure at p_max,SpC (shotcrete
-  p_max plus the bolt pressure there), *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
-  (on the plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt and, on the plateau,
-  the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
+  Legend: *FS (total)* = p_max,total / p_eq with p_max,total = sum of all p_max (Hoek Eq. 13), shown in red
+  below 1.35 (γ_F, as the 80 % limit of μ_SpC; display only), *FS (shotcrete)* = p_max,SpC / p_SpC(u_eq)
+  (on the LSC plateau p_max,SpC / p_LSC), *bolt utilisation* = p_bolt(u_eq) / p_max,bolt,
+  *shotcrete yielding* / *bolts yielding* when a component is on its plateau at the equilibrium and, on the
+  LSC plateau, the *remaining yield path* (tangential, mm). Background and test values: [docs/LSC-Analyse.md](docs/LSC-Analyse.md)
 
   Note: FS comes from the 28-day elastic support curve; σ(t) and μ_SpC come from the rate-of-flow method.
   The start and end of the yield path can differ between both (the young shell is softer than the 28-day
@@ -62,7 +67,7 @@ A web application for analytical pre-design of tunnel support using the **Conver
 - **Shotcrete utilisation μ_SpC(t)** — σ_actual(t) / σ_capacity(t) × 100 %, with 80 % design limit (γ_F = 1/1.35).
   Values above 100 % indicate overload; the rate-of-flow method does not limit stress to strength.
   Above 100 %: red dashed line and shaded band
-- **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments up to p_max,SpC are searched, so FS > 10 is found as well)
+- **Safety factor FS** — at GRC ∩ SCC equilibrium (all support-curve segments including the plateaus are searched, so FS > 10 is found as well)
 - **Parameter tab** — summary of all 20 input parameters with units
 - **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
 
