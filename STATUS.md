@@ -5,7 +5,7 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 24 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 26 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
@@ -59,6 +59,27 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
   „shotcrete at p_max (plastic) – limit state" ist entfallen.
 - **(c) σ(t) aus der Fließratenmethode wird nicht auf die Festigkeit begrenzt;** Überlastung (μ_SpC > 100 %)
   wird nur angezeigt. Schließt den früheren offenen Punkt 4 (σ bis ≈ 43 MPa > f_ck in Fall B vor (b)).
+
+Auswirkung (a) + (b), Stand 942ecd5 → jetzt (u_eq [m] / p_eq [MPa] / FS):
+
+| Fall | alt | neu |
+|---|---|---|
+| Golden `defaults`, `rateOfFlow` | 0,06689 / 1,2869 / 1,201 | 0,06689 / 1,2869 / 1,194 |
+| Golden `lsc` | 0,09680 / 0,5111 / 3,024 | unverändert |
+| Golden `lscForce600` | 0,09699 / 0,5075 / 2,882 | unverändert |
+| Golden `lscForce2400Plateau` | 0,09156 / 0,6154 / 2,377 | unverändert |
+| Golden `lscLongPlateau` | 0,11928 / 0,1538 / 9,506 | unverändert |
+| Vergleichsfall D 11 m, T_bf 400 kN, ohne LSC | 0,06747 / 1,0695 / 1,003 | no equilibrium – shotcrete fails |
+| Fall A | no equilibrium | no equilibrium – support capacity insufficient |
+| Fall B | 0,07622 / 0,8112 / 1,042 | no equilibrium – shotcrete fails |
+| Fall C | 0,08772 / 0,6987 / 2,212 | unverändert |
+| Hoek Spritzbeton / Anker / d_face 12 m | 3,35 / 1,015 / 14,463 | unverändert (Prüfgrößen bitgleich) |
+| RocSupport Problem 5 (r_pm geprüft; Ausbau = App-Standard) | FS 8,233 / 13,135 / 8,700 / 14,226 | FS 8,132 / 12,972 / 8,592 / 14,050 |
+
+Alle sechs Golden-Sets geändert: `supportCurve` (kein waagerechtes Endstück, ohne LSC getrennte Kurven);
+`defaults` und `rateOfFlow` zusätzlich FS (Ausbaudruck bei p_max,SpC 1,5362 statt Summe aller p_max 1,5458 MPa,
+die Anker erreichen p_max erst nach 3,99 mm, der Spritzbeton nach 3,53 mm). u_eq und p_eq unverändert,
+weil die Summe bis zum ersten p_max dieselbe Gerade ist wie die alte kombinierte Kennlinie.
 - Schnittpunktsuche über alle Segmente der Ausbaukennlinie ab Index 0: FS > 10 wird gefunden
   (Hoek-Fall mit d_face 12 m: vorher FS 0, jetzt FS 14,46).
 - **Fehler korrigiert: LDP unter Stützdruck, Zeitreihe endete vor u_eq.**
