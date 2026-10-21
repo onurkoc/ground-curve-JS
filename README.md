@@ -1,10 +1,12 @@
 # GroundCurve — Tunnel Ground Reaction Analysis (JavaScript)
 
+**▶ Live app: [https://groundcurve.onurkoc.net](https://groundcurve.onurkoc.net)** — version 2.0.0
+
 A web application for analytical pre-design of tunnel support using the **Convergence-Confinement Method (CCM)**. This is the JavaScript reimplementation of the original Python version. It runs entirely in the browser (static site, hosted on Cloudflare Pages); no installation is needed.
 
-## ⬇️ Letzte Desktop-Version v1.8.1
+## ⬇️ Last desktop version v1.8.1
 
-**[GroundCurve-win32-x64.zip](https://github.com/onurkoc/ground-curve-JS/releases/download/v1.8.1/GroundCurve-win32-x64.zip)** — last desktop (Electron) release, Windows x64, no installation required. Extract and run `GroundCurve.exe`. The desktop version is no longer developed; new features are only added to the web app.
+**[GroundCurve-win32-x64.zip](https://github.com/onurkoc/ground-curve-JS/releases/download/v1.8.1/GroundCurve-win32-x64.zip)** — last desktop (Electron) release, Windows x64, no installation required. Extract and run `GroundCurve.exe`. The desktop version is no longer developed; new features are only added to the web app. It does not contain the fixes of 2.0.0 (see [Change Log](Change%20Log.txt)), e.g. the LDP correction under support pressure.
 
 ---
 

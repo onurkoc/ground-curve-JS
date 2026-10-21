@@ -1,11 +1,11 @@
 # Status
 
-Stand: 2026-10-21, Branch `web` (nicht gemergt).
+Stand: 2026-10-21, Version 2.0.0, Branch `web` (Merge nach `main` mit Release 2.0.0).
 
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 38 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 40 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
@@ -139,28 +139,34 @@ Offen gegenüber Entfellner:
 - **Festigkeit und E-Modul in der Zeit** nach Aldrian (Gl. V-41/V-42 bei Gschwandtner), nicht nach
   Entfellner Gl. 6.8–6.11.
 
-## Offene Punkte
+## Release 2.0.0
 
-1. **LSC mehrstufig** (Quelle: 3 Stufen, Anhang B: 600 / 700 / 1000 kN, 70 / 60 / 50 mm).
-2. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
+- Version 2.0.0 (`package.json`), Eintrag „2.0.0 – web app" im Change Log, Live-App
+  https://groundcurve.onurkoc.net (Custom Domain und Cache Rule richtet Onur im Cloudflare-Dashboard ein).
+- Behoben vor dem Release: μ_SpC = 0 ab 27,96 d (Festigkeit ab 671 h jetzt konstant; nur Golden-Set
+  `rateOfFlow` betroffen, 24 Punkte ab 28,16 d, μ_SpC dort 17,2 % statt 0).
+- Desktop v1.8.1 bleibt die letzte Desktop-Version; sie enthält den korrigierten u_im(p_i)-Fehler noch
+  (siehe *Erledigt*), kein neues Desktop-Release geplant. Ende der Zeitreihe vor/nach der Korrektur:
+
+  | Fall | u_eq [m] | Ende alt u [m] / t [d] | Ende neu u [m] / t [d] |
+  |---|---|---|---|
+  | (a) Standard ohne LSC | 0,06689 | 0,06672 / 14,03 | 0,06689 / 13,74 |
+  | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 / 14,22 | 0,09699 / 17,23 |
+  | (c) Fall C | 0,08772 | 0,08714 / 16,72 | 0,08771 / 15,70 |
+
+## Offen nach Release 2.0.0
+
+1. **Excel-Vergleich LSC**: App gegen `references/Gschwandtner_Ausbaukennlinien_AbbV-51.xlsx` (Abb. V-51,
+   Ausbaukennlinien mit Stauchelement und Ankern) prüfen.
+2. **LSC mehrstufig** (Quelle: 3 Stufen, Anhang B: 600 / 700 / 1000 kN, 70 / 60 / 50 mm).
+3. **Stahlbögen nach Hoek**: noch nicht in der App. Vor Umsetzung klären, ob K_ss nach Gl. 15
    (Hoek, *Rock-Support Interaction*) mit Fig. 13 übereinstimmt.
-3. **Prüfung auf echtem Handy** (bisher nur Browser-Emulator 390 × 844).
-4. **Desktop v1.8.1** enthält den korrigierten u_im(p_i)-Fehler noch (siehe *Erledigt*); kein neues Release geplant.
+4. **t1 nach Entfellner Gl. 6.18** (t1 = RL / AR · Δt): in der App 0 (Belastung sofort beim Einbau).
+5. **Festigkeit und E-Modul in der Zeit nach Entfellner Gl. 6.8–6.11** statt nach Aldrian.
 
-   Ende der Zeitreihe vor/nach der Korrektur:
+Weitere offene Punkte:
 
-   | Fall | u_eq [m] | Ende alt u [m] / t [d] | Ende neu u [m] / t [d] |
-   |---|---|---|---|
-   | (a) Standard ohne LSC | 0,06689 | 0,06672 / 14,03 | 0,06689 / 13,74 |
-   | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 / 14,22 | 0,09699 / 17,23 |
-   | (c) Fall C | 0,08772 | 0,08714 / 16,72 | 0,08771 / 15,70 |
-
-5. ~~**μ_SpC = 0 ab einem Alter von 27,96 d**~~ **behoben:** Die Festigkeitskurve (Aldrian) ist nur bis
-   671 h tabelliert; danach fand die Suche keinen Wert und μ_SpC wurde 0. Jetzt bleibt die Festigkeit ab 671 h
-   konstant auf dem letzten Wert. Betrifft nur Zeitreihen länger als 28 d: Golden-Set `rateOfFlow` (0,5 m/d,
-   bis 55 d), 24 Punkte ab 28,16 d, μ_SpC dort 17,2 % statt 0, am Ende 10,5 % statt 0. Übrige Golden-Sets
-   und Fall C unverändert.
-
+- Prüfung auf echtem Handy (bisher nur Browser-Emulator 390 × 844).
 Weitere Hinweise:
 
 - Fall C (App-Standard mit Ankern, LSC 20 cm, F_LSC 2400 kN/m, σ_N 12 MPa): u 0,08772 m, p 0,6987 MPa,

@@ -1,6 +1,6 @@
 {
   "name": "groundcurve",
-  "version": "1.8",
+  "version": "2.0.0",
   "description": "Tunnel ground reaction curve analysis — Convergence-Confinement Method",
   "type": "module",
   "scripts": {
