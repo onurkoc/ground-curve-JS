@@ -5,12 +5,17 @@ Stand: 2026-10-21, Branch `web` (nicht gemergt).
 ## Erledigt
 
 - Electron vollständig entfernt; reine Vite-Web-App (`npm run dev | build | preview | test`), Ausgabe `dist/`.
-- Prüffälle mit `node --test` (`npm run test`, 28 Tests grün):
+- Prüffälle mit `node --test` (`npm run test`, 35 Tests grün):
   - Hoek, *Rock-Support Interaction* Fig. 4/6/7/13 (D 10 m, c 1500 kPa, φ 23°, E 1800 MPa, ν 0,3, p0 7 MPa, d_face 5 m):
     alle Sollwerte innerhalb der Rundung der Quelle; u_if/u_im 0,2625 vs. 0,2622 (Hoek dividiert durch gerundetes u_im).
   - RocSupport Verification Manual Problem 5 (r_pm, 4 Fälle): Abweichungen ≤ 0,005 m.
   - Gschwandtner Anhang B (LSC): p_LSC 0,1106 MPa, Δu 11,14 mm, p_max 0,6725 MPa.
   - RocSupport-Vergleich nur Spritzbeton (D 11 m, siehe unten): u_eq 81,76 mm wie RocSupport.
+  - RocSupport v4.005, Onurs Rechnungen Nr. 1–3 (Duncan-Fama, Dilatanz 0, `references/RocSupport/Nr.1–3/
+    Dilatation_Null`, `tests/rocsupport_onur.test.js`): u ohne Ausbau, u_face, u_io, r_p, p_cr, p_max, u_eq,
+    p_eq, FS alle innerhalb der Ausgaberundung. RocSupport mit Dilatanz > 0 liefert größere Verschiebungen;
+    die App rechnet mit ψ = 0.
+  - Entfellner (2024) Abb. 6.16 (`tests/entfellner.test.js`): Kriechen, Schwinden, Temperaturdehnung.
   - Golden Values unter `tests/golden/`: Werte aus der App selbst, keine Quellenwerte; zuletzt mit Entscheid 2
     (ideal-plastisch) neu erzeugt.
 - Parameter-Tab, optionale Large-strain-Kurve (nur Darstellung), `public/_headers`, Favicon.
@@ -103,26 +108,33 @@ t_c 0,15, d_face 2, Vortrieb 2, ohne LSC):
 - Mit Ankern (T_bf 400 kN, s_l = s_r = 1 m, d_b 0,02 m, l_b 10 m): RocSupport u_eq 86,89 mm, FS 1,92; App
   u_eq 76,22 mm, FS 1,322 (andere Kombinationsregel, nur zur Information).
 
+## Geklärt: Fließratenmethode gegen Entfellner (2024)
 
-## Zu prüfen: von Onur gegen Aldrian/Entfellner zu prüfen
+Quelle jetzt in `references/Diss.-Entfellner.pdf`, Kap. 6.4.4.3, S. 136–138, Gl. 6.13–6.17, Tab. 6.4, Abb. 6.16.
 
-**Kriechen, Schwinden und Temperatur ab Belastungsbeginn (nach Ende Stauchweg)** – eingeführt in
-Commit 799116f ohne ausdrücklichen Auftrag.
+- **Kriechen ab Belastungsbeginn (Commit 799116f) – durch Entfellner Gl. 6.14 belegt, geschlossen.**
+  C(t) = A · (t − t1)^0,25 mit t = Betonalter [h] und t1 = Betonalter bei Erstbelastung [h]: die Kriechzeit
+  läuft ab Erstbelastung. In der App beginnt die Belastung beim Einbau (u_io), also t1 = 0; mit LSC läuft die
+  Zeit nach dem Stauchweg ab u_io weiter (kein Neustart). Schwinden (Gl. 6.16) und Temperatur (Gl. 6.17) zählen
+  in der Quelle nach Betonalter; mit t1 = 0 fallen Betonalter und Belastungsbeginn zusammen.
+- Parameter Tab. 6.4 (A 0,000045, B 10 d, Q 0,000100, C_d∞ 0,000090, ε_sh∞ 0,001250) identisch mit der App;
+  Funktionen in `tests/entfellner.test.js` gegen Abb. 6.16 geprüft (C(28 d) mit t1 = 3,6 h ≈ 0,00023 MPa⁻¹,
+  ε_sh(28 d) ≈ 0,00092, ε_t max ≈ 60·10⁻⁶ bei 0,25–0,3 d, ≈ 0 ab 4 d).
+- **Temperaturdehnung korrigiert:** nur für Betonalter 0 ≤ t ≤ 96 h (Hinweis zu Gl. 6.17), danach
+  ε_t = ε_t(96 h) ≈ 0,18·10⁻⁶ konstant. Vorher schwang der Kosinus weiter (6 d: 4,3·10⁻⁶). Winkel in Grad:
+  nur so wird Abb. 6.16 d reproduziert (der Text nennt Radiant). Faktor in der App für Tage
+  250 ≈ 113 · 24^0,25 = 250,1.
+  Auswirkung (nur nach 4 d): Standard σ am Ende der Zeitreihe (13,74 d) 4,646 → 4,982 MPa, μ_SpC 16,1 → 17,2 %;
+  Maximum unverändert (σ 14,19 MPa bei 2,68 d, μ_SpC 66,1 % bei 1,78 d). Fall C unverändert (Schale bis zum
+  Ende auf σ_N 12 MPa; μ_SpC max 375,4 % bei 0,145 d, min 41,2 % bei 15,70 d). Golden-Sets `defaults`, `lsc`,
+  `rateOfFlow`, `lscForce600` in σ(t)/μ_SpC geändert, `lscForce2400Plateau`, `lscLongPlateau` unverändert.
 
-- Was: Mit F_LSC > 0 läuft `rateOfFlow()` nach dem Stauchweg mit `tLoadDays = t_gap_days` weiter
-  (t_gap_days = Zeit ab u_io bis Stauchende nach Fließratenmethode).
-  Die Zeit in C(t) = A · t_h^0,25 (Kriechen), ε_sh(t) = ε_sh,∞ · t/(t + B) (Schwinden) und
-  θ(t) = 250 · t^0,25 (Temperatur) läuft damit ab u_io (Einbau = Belastungsbeginn) weiter, nicht ab Ende Stauchweg.
-  E_SpC(t) nutzte schon vorher das wahre Betonalter (Aldrian, Gl. V-41).
-- Quelle: Schubert (1988), Umsetzung nach Entfellner (2024), Diss. TU Graz, Kap. 6, Gl. 6.13–6.15;
-  im Code steht zu Gl. 6.14 „t measured from initial loading, in hours". **Entfellner liegt nicht in
-  `references/`; die Aussage ist nicht am Original geprüft.** Aldrian (1991) liegt ebenfalls nicht vor.
-- Begründung: Die Schale ist ab u_io belastet (Anstieg ab 0, dann σ_N, dann Fließratenmethode).
-  Ein Neustart bei t = 0 am Ende des Stauchwegs ließe C(t) mit unendlicher Steigung neu beginnen;
-  im ersten Schritt würde die Spannung σ_N fast vollständig relaxiert (Commit 799116f).
-  Ohne LSC sind Belastungsbeginn und Einbau gleich (t = 0 bei u_io); dort ändert sich nichts.
-- Offen: Gilt Schwinden und Temperatur ab Belastungsbeginn oder ab Betonalter 0? Im Modell fallen beide
-  auf u_io zusammen; bei einem späteren Einbaualter (t0 > 0) wäre das zu unterscheiden.
+Offen gegenüber Entfellner:
+
+- **t1 (Gl. 6.18: t1 = RL / AR · Δt)** ist in der App 0 (Belastung sofort beim Einbau). Abb. 6.16 a nutzt
+  t1 = 3,6 h; der Unterschied in C(28 d) ist < 10⁻⁶ MPa⁻¹, am Anfang aber groß (Steigung von C(t) bei t → t1).
+- **Festigkeit und E-Modul in der Zeit** nach Aldrian (Gl. V-41/V-42 bei Gschwandtner), nicht nach
+  Entfellner Gl. 6.8–6.11.
 
 ## Offene Punkte
 
@@ -139,6 +151,11 @@ Commit 799116f ohne ausdrücklichen Auftrag.
    | (a) Standard ohne LSC | 0,06689 | 0,06672 / 14,03 | 0,06689 / 13,74 |
    | (b) F_LSC 600, LSC 20 cm, ohne Anker | 0,09699 | 0,09640 / 14,22 | 0,09699 / 17,23 |
    | (c) Fall C | 0,08772 | 0,08714 / 16,72 | 0,08771 / 15,70 |
+
+5. **μ_SpC = 0 ab einem Alter von 27,96 d** (Befund, nicht geändert): Die Festigkeitskurve (Aldrian) ist nur
+   bis 671 h tabelliert; für spätere Zeiten findet die Suche keinen Wert und μ_SpC wird 0. Betrifft Zeitreihen
+   länger als 28 d, z. B. Golden-Set `rateOfFlow` (0,5 m/d, Zeitreihe bis 55 d). Vorschlag: Festigkeit nach
+   28 d konstant fortsetzen.
 
 Weitere Hinweise:
 

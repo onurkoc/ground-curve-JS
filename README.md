@@ -60,6 +60,10 @@ A web application for analytical pre-design of tunnel support using the **Conver
   The start and end of the yield path can differ between both (the young shell is softer than the 28-day
   stiffness K_SpC, so σ(t) reaches σ_N later than u_lsc = u_io + p_LSC / K_SpC).
 - **Rate-of-Flow stress model** — time-dependent shotcrete stress accounting for creep, shrinkage and thermal effects (Schubert 1988, Aldrian 1991).
+  Creep, shrinkage and temperature strain after Entfellner (2024), Kap. 6.4.4.3, Gl. 6.14–6.17 and Tab. 6.4
+  (checked against Abb. 6.16). The temperature strain acts only for a concrete age up to 96 h and stays
+  constant afterwards; its angle is taken in degrees (reproduces Abb. 6.16 d). Strength and stiffness in time
+  follow Aldrian, the age at initial loading t1 (Entfellner Gl. 6.18) is 0.
   With F_LSC > 0 (force-controlled): rate of flow from 0 until σ(t) reaches σ_N = F_LSC / t_c, then constant
   σ_N over the yield path u_gap (Gschwandtner S. 56); rate of flow then continues from σ_N, with creep,
   shrinkage and thermal terms counted from the start of loading. Start and end of yielding are found in the
@@ -113,7 +117,17 @@ npm run preview    # serve dist/ locally
 npm run test
 ```
 
-Runs the verification cases against published values (Hoek *Rock-Support Interaction*, RocSupport Verification Manual Problem 5, Gschwandtner Anhang B for the LSC force) and the golden regression baseline in `tests/golden/` (regenerate deliberately with `UPDATE_GOLDEN=1 npm run test`).
+Runs the verification cases against published values (Hoek *Rock-Support Interaction*, RocSupport Verification Manual Problem 5, Gschwandtner Anhang B for the LSC force, Entfellner Abb. 6.16 for the rheological functions) and the golden regression baseline in `tests/golden/` (regenerate deliberately with `UPDATE_GOLDEN=1 npm run test`).
+
+**Validation against RocSupport v4.005** (Duncan-Fama, dilation 0, LDP Vlachopoulos & Diederichs 2009; input and output in `references/RocSupport/Nr.1–3/Dilatation_Null`), `tests/rocsupport_onur.test.js`. All values agree within the rounding of the RocSupport output:
+
+| Case | Input | Checked |
+|---|---|---|
+| 1 | D 10 m, γ 20, H 350, E 1800 MPa, ν 0.3, c 1500 kPa, φ 23°, d_face 5 m; shotcrete t_c 0.3 m, f_ck 35, E_c 30000 MPa | u unsupported 42.65 mm, u_face 11.2 mm, u_io 30.39 mm, r_p 7.96 m, p_cr 2.88, p_max 2.037, u_eq 31.96 mm, p_eq 0.61 MPa, FS 3.35 |
+| 2 | as 1, bolts only: T_bf 354 kN, 1 × 1 m, d_b 34 mm, l_b 3 m | p_max 0.354, u_eq 35.95 mm, p_eq 0.35 MPa, FS 1.02 |
+| 3 | D 8 m, γ 20, H 500, E 1050 MPa, ν 0.3, c 1000 kPa, φ 28°, d_face 2 m; shotcrete t_c 0.2 m, f_ck 30, E_c 31000 MPa | u_face 32.66 mm, u_io 63.94 mm, r_p 7.92 m, p_max 1.463, u_eq 67.03 mm, p_eq 1.28 MPa, FS 1.14 |
+
+The app uses the Duncan-Fama solution without dilation (ψ = 0). RocSupport with dilation ψ > 0 gives larger displacements, so only the dilation-0 runs are comparable.
 
 ---
 
