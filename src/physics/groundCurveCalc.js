@@ -91,6 +91,30 @@ function findSegmentIntersection(firstCurve, secondCurve) {
 
 // ─── Rate of flow (creep / shrinkage / thermal) ──────────────────────────────
 
+// Rheological shotcrete parameters for the Flow-Rate Method: Entfellner (2024), Diss. TU Graz,
+// Kap. 6.4.4.3, Tab. 6.4 (references/Diss.-Entfellner.pdf, S. 137)
+export const RHEOLOGY = { A: 0.000045, B: 10, Q: 0.000100, C_d_inf: 0.000090, eps_sh_inf: 0.001250 }
+
+// Gl. 6.14: irreversible viscous strain C(t) = A · (t − t1)^0.25 [MPa⁻¹], t and t1 in hours.
+// The app uses t1 = 0 (time counted from the start of loading).
+export function viscousStrain(tHours, t1Hours = 0) {
+    return RHEOLOGY.A * (tHours - t1Hours) ** 0.25
+}
+
+// Gl. 6.16: shrinkage strain ε_sh(t) = ε_sh,∞ · t / (B + t) [-], t in days
+export function shrinkageStrain(tDays) {
+    return RHEOLOGY.eps_sh_inf * tDays / (tDays + RHEOLOGY.B)
+}
+
+// Gl. 6.17: temperature strain ε_t(t) = (−cos(t_h^0.25 · 113) + 1) · 30·10⁻⁶ [-], t_h in hours.
+// Written in days: t_h^0.25 · 113 = t_d^0.25 · 24^0.25 · 113 ≈ t_d^0.25 · 250 (250.1).
+// The angle is taken in degrees: only then Abb. 6.16 d is reproduced (maximum 60·10⁻⁶ at about
+// 0.27 d, ≈ 0 at 4 d); the text of the source says radians.
+export function temperatureStrain(tDays) {
+    const theta = tDays ** 0.25 * 250
+    return (-1 * Math.cos(Math.PI / 180 * theta) + 1) * 30 / 1000000
+}
+
 // sigma0: shell stress at the start of the series [MPa] (e.g. the LSC load carried before)
 // tLoadDays: time since the start of loading at the start of the series [days]; creep, thermal
 //   and shrinkage terms are counted from the start of loading
@@ -106,19 +130,17 @@ function rateOfFlow(dispObj, rate, E_c, t0Days = 0, sigma0 = 0, tLoadDays = 0) {
     const del_eps = []
     arr_disp.slice(1).forEach((item, index) => del_eps.push(item - arr_disp.slice(0, -1)[index]))
 
-    const A = 0.000045, B = 10
-    const eps_sh_inf = 0.001250, C_d_inf = 0.000090, Q = 0.000100
+    const { C_d_inf, Q } = RHEOLOGY
 
     // Eq. 6.14: C(t) = A * t_hours^0.25 (t measured from initial loading, in hours)
-    const C_t = load_hours.map(item => A * item ** 0.25)
-    const theta = load_days.map(item => item ** 0.25 * 250)
-    const eps_t = theta.map(item => (-1 * Math.cos(Math.PI / 180 * item) + 1) * 30 / 1000000)
+    const C_t = load_hours.map(item => viscousStrain(item))
+    const eps_t = load_days.map(item => temperatureStrain(item))
     // Gl. V-41 (Aldrian): E_SpC(t) = E_SpC(28d) * sqrt(t_hours / (4.2 + 0.85*t_hours)),
     // true concrete age in hours. Pairs with the Aldrian strength curve (Gl. V-42) used
     // for the target/capacity curve below.
     const t_real_hours = arr_hours.map(h => t0Days * 24 + h)
     const E_t = t_real_hours.map(h => E_c * Math.sqrt(h / (4.2 + 0.85 * h)))
-    const eps_sh = load_days.map(item => eps_sh_inf * item / (item + B))
+    const eps_sh = load_days.map(item => shrinkageStrain(item))
 
     const sigma_2 = [sigma0], eps_d = [0]
     for (let index = 0; index < arr_days.length; index++) {
