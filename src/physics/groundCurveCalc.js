@@ -659,14 +659,13 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
     }
 
-    if (!noEquilibrium) {
-        data.push({
-            x: obj.originalLDP.x, y: obj.originalLDP.y,
-            mode: 'lines', name: 'Org. LDP',
-            line: { color: 'blue', width: 1.5, dash: 'dashdot' },
-            hoverinfo: 'none', xaxis: 'x1', yaxis: 'y2'
-        })
-    }
+    // Original LDP and target stress do not depend on the equilibrium: always shown
+    data.push({
+        x: obj.originalLDP.x, y: obj.originalLDP.y,
+        mode: 'lines', name: 'Org. LDP',
+        line: { color: 'blue', width: 1.5, dash: 'dashdot' },
+        hoverinfo: 'none', xaxis: 'x1', yaxis: 'y2'
+    })
     if (obj.utilisationSpC) {
         data.push({
             x: obj.utilisationSpC.x, y: obj.utilisationSpC.y,
@@ -701,12 +700,10 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         }
     }
     const muRangeMax = obj.utilisationSpC ? Math.max(110, Math.max(...obj.utilisationSpC.y) * 1.05) : 110
-    if (!noEquilibrium) {
-        data.push({
-            x: obj.targetStress.x, y: obj.targetStress.y,
-            mode: 'lines', name: 'Stress (target)', line: { color: 'green' }, xaxis: 'x2', yaxis: 'y4'
-        })
-    }
+    data.push({
+        x: obj.targetStress.x, y: obj.targetStress.y,
+        mode: 'lines', name: 'Stress (target)', line: { color: 'green' }, xaxis: 'x2', yaxis: 'y4'
+    })
 
     const maxX = Math.max(...obj.groundCurve.x)
     const maxY = Math.max(...obj.groundCurve.y)
@@ -760,20 +757,17 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
             font: { family: 'Arial, sans-serif', size: options.legendBelow ? 11 : 13, color: '#b00000' },
             bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#b00000', borderwidth: 1, borderpad: 4
         })
-        // GRC: top right, where the ground curve is low; LDP, μ_SpC and σ panels: centred, no traces
+        // GRC: top right, where the ground curve is low. LDP and σ panels keep Org. LDP and the
+        // target stress, the message sits in their free lower part; the μ_SpC panel is empty.
         layout.annotations = [
             message('x domain', 'y domain', 0.98, 0.95, 'right', 'top'),
-            message('x domain', 'y2 domain', 0.5, 0.5, 'center', 'middle'),
+            message('x domain', 'y2 domain', 0.5, 0.12, 'center', 'middle'),
             message('x2 domain', 'y3 domain', 0.5, 0.5, 'center', 'middle'),
-            message('x2 domain', 'y4 domain', 0.5, 0.5, 'center', 'middle')
+            message('x2 domain', 'y4 domain', 0.6, 0.25, 'center', 'middle')
         ]
-        for (const axis of ['xaxis2', 'yaxis2', 'yaxis3', 'yaxis4']) {
-            Object.assign(layout[axis], { showticklabels: false, showgrid: false, zeroline: false })
-        }
-        // Plotly draws a subplot only if it holds a trace: invisible placeholders keep the empty panels
-        for (const [xaxis, yaxis] of [['x1', 'y2'], ['x2', 'y3'], ['x2', 'y4']]) {
-            data.push({ x: [0], y: [0], mode: 'markers', opacity: 0, showlegend: false, hoverinfo: 'none', xaxis, yaxis })
-        }
+        Object.assign(layout.yaxis3, { showticklabels: false, showgrid: false, zeroline: false })
+        // Plotly draws a subplot only if it holds a trace: an invisible placeholder keeps the μ_SpC panel
+        data.push({ x: [0], y: [0], mode: 'markers', opacity: 0, showlegend: false, hoverinfo: 'none', xaxis: 'x2', yaxis: 'y3' })
         // Basic: legend sits top right, so the message goes to the lower middle
         layoutBasic.annotations = [message('x domain', 'y domain', 0.5, 0.3, 'center', 'middle')]
     }

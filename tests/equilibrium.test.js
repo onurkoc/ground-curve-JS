@@ -69,7 +69,12 @@ test('Fall A: message instead of empty plots, FS shown as "–"', () => {
     assert.deepEqual(graph.layout.annotations.map(a => a.text), Array(4).fill(NO_CAPACITY))
     assert.deepEqual(graph.layout.annotations.map(a => a.yref), ['y domain', 'y2 domain', 'y3 domain', 'y4 domain'])
     assert.deepEqual(graphBasic.layout.annotations.map(a => a.text), [NO_CAPACITY])
-    for (const hidden of ['New LDP', 'Stress (actual)', 'μ_SpC [%]']) assert.ok(!names(graph).includes(hidden), hidden)
+    for (const hidden of ['New LDP', 'Stress (actual)', 'μ_SpC [%]', 'Design limit (80%)']) {
+        assert.ok(!names(graph).includes(hidden), hidden)
+    }
+    assert.ok(!names(graph).some(n => /overloaded/.test(n ?? '')))
+    // independent of the equilibrium: still shown
+    for (const shown of ['Org. LDP', 'Stress (target)']) assert.ok(names(graph).includes(shown), shown)
 })
 
 test('Fall B: shotcrete reaches p_max before the ground curve, no equilibrium with the bolts', () => {
