@@ -12,7 +12,7 @@
     <div v-if="isMobile && sidebarOpen" class="sidebar-backdrop" @click="sidebarOpen = false"></div>
 
     <ParameterPanel id="parameter-sidebar" :class="{ 'sidebar--open': sidebarOpen }"
-      :params="params" v-model:largeStrain="showLargeStrain" @change="recalculate" />
+      :params="params" :labels="paramLabels" v-model:largeStrain="showLargeStrain" @change="recalculate" />
 
     <div class="chart-area">
       <Tabs value="basic" class="chart-tabs" @update:value="onTabChange">
@@ -112,13 +112,13 @@ const paramLabels = {
   E_c:          'SpC Elasticity',
   nu_c:         'SpC Poisson\'s Ratio',
   t_c:          'SpC Thickness',
-  dis_sup:      'SpC Distance',
+  dis_sup:      'Installation distance from face',
   advance_rate: 'Advance Rate',
   l_yield:      'LSC Yield',
   F_LSC:        'LSC Force',
   t_bf: 'Bolt Pull-out Force',
   s_l:  'Bolt Longitudinal Spacing',
-  s_r:  'Bolt Radial Spacing',
+  s_r:  'Bolt Circumferential Spacing',
   d_b:  'Bolt Diameter',
   l_b:  'Bolt Length'
 }

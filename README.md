@@ -77,7 +77,24 @@ A web application for analytical pre-design of tunnel support using the **Conver
   output; "–" when there is no equilibrium. Hovering the equilibrium point shows u_eq, p_eq and FS in full
   (hover names are never cut)
 - **Parameter tab** — summary of all 20 input parameters with units
-- **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, legend below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
+- **Phone layout** (≤ 768 px) — parameter sidebar behind a *Parameters* button, full-width charts, results box (FS, displacements, p_eq, P_cr, R_p) above the first chart, legend with the curve names below the chart, no mode bar; the Enhanced tab stacks its four plots and scrolls
+
+## Inputs
+
+Sidebar label (full name as tooltip and in the Parameter tab):
+
+| Sidebar | Name | Unit |
+|---|---|---|
+| γ, H, ν, E, c, φ | Unit weight, overburden, Poisson's ratio, rock mass modulus, cohesion, friction angle | kN/m³, m, –, MPa, kPa, ° |
+| Dia. | Tunnel Diameter | m |
+| f_ck, E_c, ν_c, t_c | SpC Strength, SpC Elasticity, SpC Poisson's Ratio, SpC Thickness | MPa, MPa, –, m |
+| d_face | Installation distance from face | m |
+| adv. | Advance Rate | m/day |
+| LSC, LSC force | LSC Yield (yield path, tangential), LSC Force (ring force F_LSC) | cm, kN/m |
+| T_bf | Bolt Pull-out Force | kN |
+| S_l | Bolt Longitudinal Spacing | m |
+| S_c | Bolt Circumferential Spacing (s_c after Hoek) | m |
+| d_b, L_b | Bolt Diameter, Bolt Length | m |
 
 ---
 
