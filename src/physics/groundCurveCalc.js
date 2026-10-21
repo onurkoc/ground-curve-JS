@@ -214,14 +214,6 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const e_s = 207000
     const k_b_el = e_s * Math.PI * d_b ** 2 / (4 * l_b * s_l * s_r)
 
-    let p_scmax_el, k_sc_el
-    if (p_bmax_el !== 0) {
-        p_scmax_el = p_scmax_conc + p_bmax_el
-        k_sc_el = k_sc_conc + k_b_el
-    } else {
-        p_scmax_el = p_scmax_conc
-        k_sc_el = k_sc_conc
-    }
 
     // Shotcrete strength in time (Aldrian model)
     const time_672hours = arange(0, 28 * 24, 1)
@@ -231,8 +223,6 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const p_scmax = sigma.map(item => item / 2 * (1 - ((D / 2 - t_c) ** 2 / (D / 2) ** 2)))
 
     // Support curve (with LSC yield)
-    const ratio_sc = p_scmax_el / k_sc_el
-    const u_iy = u_io + ratio_sc
     // LSC after Gschwandtner (2010, Kap. V-4.1.5): while the element yields it carries a constant
     // ring force. Anhang D Gl. 2-10 D (σ_N = p_i·r_m/e_SpC) gives p_LSC = F_LSC / r_m.
     const r_m = D / 2 - t_c / 2
@@ -241,32 +231,38 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     // above the shotcrete capacity never yields: no gap.
     const u_gap = p_LSC < p_scmax_conc ? (l_yield / 100) / (2 * Math.PI) : 0
 
-    // With LSC: shotcrete and bolt curves are built separately, both starting at u_io, and added at
-    // equal wall displacement (Gl. V-50, Abb. V-51). Only the shotcrete curve has the yield path:
-    //   p_LSC > 0: elastic rise to p_LSC, constant p_LSC over u_gap, elastic rise to p_max,SpC
-    //   p_LSC = 0: zero pressure over u_gap (open slot), then elastic rise to p_max,SpC
+    // Shotcrete and bolt curves are built separately, both starting at u_io, and added at equal wall
+    // displacement (Gschwandtner Gl. V-50, Abb. V-51), with and without LSC. Only the shotcrete
+    // curve has the yield path:
+    //   no LSC:     elastic rise to p_max,SpC
+    //   p_LSC > 0:  elastic rise to p_LSC, constant p_LSC over u_gap, elastic rise to p_max,SpC
+    //   p_LSC = 0:  zero pressure over u_gap (open slot), then elastic rise to p_max,SpC
     // The bolt curve is not shifted by u_gap.
-    // Without LSC: combined elastic rise (the point at 10 % of p_max is kept for the plot).
-    let x_support_el, y_support_el, lscCurves = null
-    if (u_gap > 0) {
-        const u_lsc = u_io + p_LSC / k_sc_conc                  // start of the yield path
-        const u_spc_top = u_lsc + u_gap + (p_scmax_conc - p_LSC) / k_sc_conc
-        const shotcrete = p_LSC > 0
-            ? { x: [u_io, u_lsc, u_lsc + u_gap, u_spc_top], y: [0, p_LSC, p_LSC, p_scmax_conc] }
-            : { x: [u_io, u_io + u_gap, u_spc_top], y: [0, 0, p_scmax_conc] }
-        const bolts = p_bmax_el > 0 && k_b_el > 0
-            ? { x: [u_io, u_io + p_bmax_el / k_b_el], y: [0, p_bmax_el] }
-            : null
-        const total = sumCurves(bolts ? [shotcrete, bolts] : [shotcrete])
-        const u_end = total.x[total.x.length - 1]
-        x_support_el = [...total.x, u_end * 1.01]
-        y_support_el = [...total.y, total.y[total.y.length - 1]]
-        lscCurves = { shotcrete, bolts, yieldStart: u_lsc, yieldEnd: u_lsc + u_gap }
-    } else {
-        const a_yield = 0.1 * (u_iy - u_io) + u_io
-        x_support_el = [u_io, a_yield, a_yield, u_iy, u_iy * 1.01]
-        y_support_el = [0, 0.1 * p_scmax_el, 0.1 * p_scmax_el, p_scmax_el, p_scmax_el]
+    const u_lsc = u_io + p_LSC / k_sc_conc                      // start of the yield path
+    let shotcrete = null
+    if (p_scmax_conc > 0 && k_sc_conc > 0) {
+        if (u_gap === 0) {
+            shotcrete = { x: [u_io, u_io + p_scmax_conc / k_sc_conc], y: [0, p_scmax_conc] }
+        } else {
+            const u_spc_top = u_lsc + u_gap + (p_scmax_conc - p_LSC) / k_sc_conc
+            shotcrete = p_LSC > 0
+                ? { x: [u_io, u_lsc, u_lsc + u_gap, u_spc_top], y: [0, p_LSC, p_LSC, p_scmax_conc] }
+                : { x: [u_io, u_io + u_gap, u_spc_top], y: [0, 0, p_scmax_conc] }
+        }
     }
+    const bolts = p_bmax_el > 0 && k_b_el > 0
+        ? { x: [u_io, u_io + p_bmax_el / k_b_el], y: [0, p_bmax_el] }
+        : null
+    const components = [shotcrete, bolts].filter(Boolean)
+    const total = components.length ? sumCurves(components) : { x: [u_io], y: [0] }
+    const u_end = total.x[total.x.length - 1]
+    const x_support_el = [...total.x, u_end * 1.01]
+    const y_support_el = [...total.y, total.y[total.y.length - 1]]
+    // Components are shown (and FS (shotcrete) / bolt utilisation given) when there is more than
+    // the shotcrete or the bolts alone, i.e. both supports or an LSC
+    const lscCurves = (shotcrete && bolts) || u_gap > 0
+        ? { shotcrete, bolts, yieldStart: u_gap > 0 ? u_lsc : null, yieldEnd: u_gap > 0 ? u_lsc + u_gap : null }
+        : null
 
     const data_object = {
         groundCurve: { x, y },
@@ -294,7 +290,7 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     // With LSC: separate safety measures for shotcrete and bolts at the equilibrium
     //   FS (shotcrete) = p_max,SpC / p_SpC(u_eq)   (on the plateau: p_max,SpC / p_LSC)
     //   bolt utilisation = p_bolt(u_eq) / p_max,bolt
-    const p_max_total = lscCurves ? y_support_el[y_support_el.length - 1] : p_scmax_el
+    const p_max_total = y_support_el[y_support_el.length - 1]
     data_object.lsc = {
         F_LSC, p_LSC, r_m, u_gap, inPlateau: false,
         FS_shotcrete: null, boltUtilisation: null, remainingYieldPath: null,
@@ -304,13 +300,13 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     data_object.supportComponents = lscCurves
     if (intersection && lscCurves) {
         const u_eq = intersection.x
-        const p_spc = curveAt(lscCurves.shotcrete.x, lscCurves.shotcrete.y, u_eq)
+        const p_spc = lscCurves.shotcrete ? curveAt(lscCurves.shotcrete.x, lscCurves.shotcrete.y, u_eq) : 0
         data_object.lsc.FS_shotcrete = p_spc > 0 ? p_scmax_conc / p_spc : null
         if (lscCurves.bolts) {
             data_object.lsc.boltUtilisation = curveAt(lscCurves.bolts.x, lscCurves.bolts.y, u_eq) / p_bmax_el
         }
         // Equilibrium on the LSC plateau: the element is still yielding at p_LSC
-        if (p_LSC > 0 && u_eq >= lscCurves.yieldStart - EPS && u_eq <= lscCurves.yieldEnd + EPS) {
+        if (p_LSC > 0 && u_gap > 0 && u_eq >= lscCurves.yieldStart - EPS && u_eq <= lscCurves.yieldEnd + EPS) {
             data_object.lsc.inPlateau = true
             data_object.lsc.FS_shotcrete = p_scmax_conc / p_LSC
             // remaining tangential yield path of the element [mm] (radial u × 2π)
@@ -404,7 +400,7 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         const p_y_l_ss = p_y_l.filter(keep)
 
         data_object.LDP = LDP
-        if (lscCurves && p_LSC > 0) {
+        if (u_gap > 0 && p_LSC > 0) {
             // LSC with load (Gschwandtner S. 56), force-controlled in time, three phases:
             //   rise: rate of flow from 0 as without LSC, until σ(t) reaches σ_N = F_LSC / t_c
             //     (not at u_lsc of the 28-day support curve; the young shell is softer)
@@ -573,7 +569,8 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         // separate safety measures at the equilibrium (legend-only entries)
         const { shotcrete, bolts } = obj.supportComponents
         const components = [{
-            x: shotcrete.x, y: shotcrete.y, mode: 'lines', type: 'scatter', name: 'Shotcrete + LSC',
+            x: shotcrete.x, y: shotcrete.y, mode: 'lines', type: 'scatter',
+            name: obj.lsc.u_gap > 0 ? 'Shotcrete + LSC' : 'Shotcrete',
             line: { color: 'red', width: 1, dash: 'dot' }, xaxis: 'x1', yaxis: 'y1'
         }]
         if (bolts) {

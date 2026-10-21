@@ -44,10 +44,11 @@ export function hoekMetrics(inputs) {
     const r_pm = obj.plasticRadius.y[0]
     const u_im = obj.groundCurve.x[0]              // p_i = 0
     const u_if = obj.u_if.u_if
-    const sc = obj.supportCurve                    // no LSC: [u_io, a, a, u_iy, 1.01 u_iy]
+    // Single support (shotcrete or bolts alone), no LSC: elastic rise from (u_io, 0) to (u_iy, p_max)
+    const sc = obj.supportCurve
     const u_io = sc.x[0]
-    const u_iy = sc.x[3]
-    const p_max = sc.y[3]
+    const p_max = Math.max(...sc.y)
+    const u_iy = sc.x[sc.y.indexOf(p_max)]
     const K = p_max / (u_iy - u_io)
     const { k, sigma_cm } = backSolveStrength(p_o, p_cr, r_pm / r_o)
     return {

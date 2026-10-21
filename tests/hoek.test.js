@@ -70,8 +70,9 @@ test('Equilibrium below 10 % of p_max is found (FS > 10, support at 12 m)', () =
 
     // Independent check: intersect the full elastic support line from (u_io, 0) to (u_iy, p_max)
     // with the ground curve. An equilibrium exists, below 10 % of p_max.
-    const [u_io, , , u_iy] = obj.supportCurve.x
-    const p_max = obj.supportCurve.y[3]
+    const u_io = obj.supportCurve.x[0]
+    const p_max = Math.max(...obj.supportCurve.y)
+    const u_iy = obj.supportCurve.x[obj.supportCurve.y.indexOf(p_max)]
     const K = p_max / (u_iy - u_io)
     const gx = obj.groundCurve.x, gy = obj.groundCurve.y     // p ascending, u descending
     let p_eq = null

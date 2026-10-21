@@ -155,5 +155,7 @@ test('Equilibrium on the LSC plateau: FS (shotcrete) and remaining yield path', 
 test('F_LSC at or above the lining capacity: element never yields, no gap', () => {
     const { obj } = run({ ...DEFAULTS, t_bf: 0, l_yield: 20, F_LSC: 10000 })
     assert.equal(obj.lsc.u_gap, 0)
-    assert.equal(obj.supportCurve.x.length, 5)
+    // shotcrete alone, no yield path: one elastic rise from u_io to p_max,SpC
+    assert.equal(obj.supportComponents, null)
+    assert.deepEqual(obj.supportCurve.y.slice(0, 2), [0, Math.max(...obj.supportCurve.y)])
 })
