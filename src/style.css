@@ -285,6 +285,56 @@ html, body, #app {
         height: calc(100vh - var(--tabbar-h) - var(--mobilebar-h));
         padding: 4px;
         overflow-y: auto;
+        flex-direction: column;   /* results box above the chart */
+    }
+
+    /* Results box above the first chart (ResultsBox.vue), two columns */
+    .chart-tab-content > .results-box {
+        flex: none;
+        margin: 2px 2px 6px;
+        padding: 6px 10px;
+        background: var(--color-hover);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        line-height: 1.35;
+        color: var(--color-text);
+    }
+
+    .results-message {
+        margin: 0 0 4px;
+        font-weight: 600;
+        color: #b00000;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 12px;
+        margin: 0;
+    }
+
+    .results-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .results-item dt {
+        color: var(--color-muted);
+        white-space: nowrap;
+    }
+
+    .results-item dd {
+        margin: 0;
+        font-weight: 600;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .results-red {
+        color: red;
     }
 
     /* Enhanced: four stacked plots need more height than the screen; the tab scrolls */

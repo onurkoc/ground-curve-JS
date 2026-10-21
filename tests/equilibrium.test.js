@@ -175,3 +175,30 @@ test('No equilibrium: Basic legend u_final and p_eq shown as "–"', () => {
     assert.ok(names(graphBasic).includes('p_eq: –'))
     assert.ok(names(graphBasic).some(n => /^u_support: \d+\.\d\d mm$/.test(n)))
 })
+
+// Phone layout: results box values returned by updateGraphic(); the legend keeps only curve names
+test('Phone: updateGraphic() returns the results box values; legend only with curve names', () => {
+    const p = { ...DEFAULTS, l_yield: 20, F_LSC: 2400 }
+    calls.length = 0
+    const r = updateGraphic(...ARG_ORDER.map(k => p[k]), { legendBelow: true })
+    assert.deepEqual(
+        { fsLabel: r.fsLabel, fs: r.fs, fsRed: r.fsRed, fsShotcrete: r.fsShotcrete, bolt: r.boltUtilisation, uFace: r.uFace, uSupport: r.uSupport, uFinal: r.uFinal, pEq: r.pEq, pCr: r.pCr, rP: r.rP, yielding: r.yielding, noEq: r.noEquilibrium },
+        { fsLabel: 'FS (total)', fs: '2.21', fsRed: false, fsShotcrete: '2.38', bolt: '100 %', uFace: '32.66 mm', uSupport: '63.94 mm', uFinal: '87.72 mm', pEq: '0.70 MPa', pCr: '4.42 MPa', rP: '7.92 m', yielding: ['bolts'], noEq: false })
+    for (const c of calls) {
+        const shown = c.data.filter(t => t.showlegend !== false).map(t => t.name)
+        assert.ok(!shown.some(n => /FS|P_cr|R_p|u_face|u_support|u_final|p_eq|utilisation|yielding|remaining/.test(n ?? '')), JSON.stringify(shown))
+        assert.ok(shown.includes('Ground Curve') && shown.includes('Support Curve'))
+    }
+    // desktop (no legendBelow): unchanged, the entries stay in the legend
+    calls.length = 0
+    updateGraphic(...ARG_ORDER.map(k => p[k]), {})
+    assert.ok(calls[1].data.some(t => t.name === 'u_final: 87.72 mm' && t.showlegend !== false))
+})
+
+test('Phone: results box for no equilibrium', () => {
+    const p = { ...DEFAULTS, ...ROC_SPC, t_c: 0, t_bf: 0 }
+    const r = updateGraphic(...ARG_ORDER.map(k => p[k]), { legendBelow: true })
+    assert.equal(r.noEquilibrium, true)
+    assert.equal(r.message, NO_CAPACITY)
+    assert.deepEqual([r.fs, r.uFinal, r.pEq, r.fsShotcrete], ['–', '–', '–', null])
+})

@@ -26,6 +26,7 @@
           <!-- Basic tab: simple GRC chart -->
           <TabPanel value="basic">
             <div class="chart-tab-content">
+              <ResultsBox v-if="isMobile && results" :r="results" />
               <div id="graphBasic" style="width:100%;height:100%"></div>
             </div>
           </TabPanel>
@@ -33,6 +34,7 @@
           <!-- Enhanced tab: 4-axis chart with LDP and time plots -->
           <TabPanel value="enhanced">
             <div class="chart-tab-content">
+              <ResultsBox v-if="isMobile && results" :r="results" />
               <div id="graph" style="width:100%;height:100%"></div>
             </div>
           </TabPanel>
@@ -66,6 +68,7 @@ import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import ParameterPanel from './components/ParameterPanel.vue'
+import ResultsBox from './components/ResultsBox.vue'
 import { updateGraphic } from './physics/groundCurveCalc.js'
 
 // ── Reactive parameters (all 19) ─────────────────────────────────────────────
@@ -143,9 +146,12 @@ mobileQuery.addEventListener('change', onMediaChange)
 onBeforeUnmount(() => mobileQuery.removeEventListener('change', onMediaChange))
 
 // ── Recalculate and render ───────────────────────────────────────────────────
+// Results of the last calculation (shown in the phone results box)
+const results = ref(null)
+
 function recalculate() {
   const p = params
-  updateGraphic(
+  results.value = updateGraphic(
     p.gamma, p.H, p.nu, p.E, p.D, p.c, p.phi,
     p.f_ck, p.E_c, p.nu_c, p.t_c,
     p.dis_sup, p.advance_rate,

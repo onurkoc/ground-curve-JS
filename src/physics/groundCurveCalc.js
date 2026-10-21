@@ -849,6 +849,34 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         displayModeBar: !options.legendBelow, displaylogo: false, responsive: true,
         modeBarButtonsToRemove: ['select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d']
     }
+    // Results shown in a box above the first chart on phones (App.vue / ResultsBox.vue); there the
+    // legend keeps only the curve names
+    const { lsc } = obj
+    const results = {
+        noEquilibrium,
+        message: noEquilibrium ? NO_EQ_TEXT : null,
+        fsLabel: obj.supportComponents ? 'FS (total)' : 'FS',
+        fs: fsText,
+        fsRed: !noEquilibrium && Number(safety) < FS_RED_BELOW,
+        fsShotcrete: lsc.FS_shotcrete !== null && !noEquilibrium ? lsc.FS_shotcrete.toFixed(2) : null,
+        boltUtilisation: lsc.boltUtilisation !== null && !noEquilibrium ? `${(lsc.boltUtilisation * 100).toFixed(0)} %` : null,
+        yielding: [obj.yielding?.shotcrete ? 'shotcrete' : null, obj.yielding?.bolts ? 'bolts' : null].filter(Boolean),
+        remainingYieldPath: lsc.inPlateau ? `${lsc.remainingYieldPath.toFixed(1)} mm` : null,
+        uFace: mm(obj.u_if.u_if),
+        uSupport: mm(obj.supportCurve.x[0]),
+        uFinal: noEquilibrium ? '–' : mm(intersect.x),
+        pEq: noEquilibrium ? '–' : `${intersect.y.toFixed(2)} MPa`,
+        pCr: obj.criticalPoint.x.length ? `${obj.criticalPoint.y[0].toFixed(2)} MPa` : '–',
+        rP: `${obj.plasticRadius.y[0].toFixed(2)} m`
+    }
+    if (options.legendBelow) {
+        // legend-only entries (opacity 0, no hover) and the FS / P_cr markers move to the results box
+        for (const t of new Set([...data, ...dataBasic])) {
+            if (t === trace3 || t === trace3_1 || (t.opacity === 0 && t.hoverinfo === 'none')) t.showlegend = false
+        }
+    }
+
     Plotly.newPlot('graph', data, layout, config)
     Plotly.newPlot('graphBasic', dataBasic, layoutBasic, config)
+    return results
 }
