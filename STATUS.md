@@ -31,8 +31,10 @@ Stand: 2026-10-16, Branch `web` (nicht gemergt).
     Legende „> 100 %: overloaded (max … %)", Achse in ganzen Prozent.
   - Enhanced-Tab bei F_LSC > 0 mit Untertitel: „FS from 28-day elastic support curve; σ(t) and μ_SpC from
     rate-of-flow method – yield path start/end can differ between both."
-  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px, Stand vor
-    der u_im-Korrektur und mit dem inzwischen entfernten Untertitel).
+  - Screenshot Fall C: `docs/screenshots/web/desktop_enhanced_lsc_caseC.png` (Desktop 1400 px).
+- Screenshots unter `docs/screenshots/web/` auf dem Stand der Entscheide (a)–(c) neu erzeugt (Desktop Basic/
+  Enhanced, mit Large strain, Handy Basic/Enhanced/unten/Seitenleiste, Fälle A, B, C); `desktop_parameter.png`
+  und `phone_parameter.png` unverändert (Parameter-Tab nicht betroffen).
   - Eingabe „LSC force" (F_LSC) und „LSC" mit Hilfetext in der Seitenleiste. Der Hinweis „FS aus
     28-Tage-Kennlinie, σ(t)/μ_SpC aus Fließratenmethode" steht im README unter LSC (nicht mehr im Diagramm).
 - Kein Gleichgewicht: FS „–", Meldung im Basic- und Enhanced-Tab; New LDP, Stress (actual), μ_SpC und die
