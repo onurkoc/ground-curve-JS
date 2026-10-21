@@ -255,9 +255,12 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         : null
     const components = [shotcrete, bolts].filter(Boolean)
     const total = components.length ? sumCurves(components) : { x: [u_io], y: [0] }
-    const u_end = total.x[total.x.length - 1]
-    const x_support_el = [...total.x, u_end * 1.01]
-    const y_support_el = [...total.y, total.y[total.y.length - 1]]
+    // Decision (b): shotcrete reaching p_max,SpC counts as failure (no ideal-plastic plateau), also
+    // if bolts still rise. The support curve ends there (with LSC: at the end of the rise after the
+    // yield path); without shotcrete it ends where the bolts reach p_max.
+    const u_fail = shotcrete ? shotcrete.x[shotcrete.x.length - 1] : total.x[total.x.length - 1]
+    const x_support_el = total.x.filter(u => u <= u_fail)
+    const y_support_el = total.y.slice(0, x_support_el.length)
     // Components are shown (and FS (shotcrete) / bolt utilisation given) when there is more than
     // the shotcrete or the bolts alone, i.e. both supports or an LSC
     const lscCurves = (shotcrete && bolts) || u_gap > 0
@@ -279,13 +282,21 @@ export function groundCurve(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
         u_if: { u_if }
     }
 
-    // Build point arrays for intersection. All segments from index 0 are searched, except the
-    // closing plateau at p_max (drawn only to show the capacity).
+    // Build point arrays for intersection. All segments of the support curve from index 0 up to
+    // p_max,SpC are searched.
     const groundCurvePoints = x.map((xi, i) => ({ x: xi, y: y[i] }))
-    const supportCurvePoints = x_support_el.slice(0, -1).map((xi, i) => ({ x: xi, y: y_support_el[i] }))
+    const supportCurvePoints = x_support_el.map((xi, i) => ({ x: xi, y: y_support_el[i] }))
 
     // Segment intersection (used for actual equilibrium)
     let [intersection] = findCurveIntersection(groundCurvePoints, supportCurvePoints)
+    // No equilibrium: 'shotcrete' if the full sum curve (bolts rising beyond p_max,SpC) would still
+    // cross the ground curve, i.e. the shotcrete fails first; 'capacity' if even the sum of all p_max
+    // is too small
+    data_object.noEquilibrium = null
+    if (!intersection) {
+        const [beyond] = findCurveIntersection(groundCurvePoints, total.x.map((xi, i) => ({ x: xi, y: total.y[i] })))
+        data_object.noEquilibrium = beyond ? 'shotcrete' : 'capacity'
+    }
 
     // With LSC: separate safety measures for shotcrete and bolts at the equilibrium
     //   FS (shotcrete) = p_max,SpC / p_SpC(u_eq)   (on the plateau: p_max,SpC / p_LSC)
@@ -509,10 +520,13 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
     const obj = data_array[0]
     const intersect = data_array[1]
     const safety = data_array[2]
-    // No crossing of ground and support curve: the support capacity is below the ground pressure.
+    // No crossing of ground and support curve up to p_max,SpC: either the shotcrete fails first
+    // (bolts alone would still reach the ground curve) or the whole support capacity is too small.
     // FS, LDP, σ(t) and μ_SpC do not exist; the plots show a message instead of empty axes.
     const noEquilibrium = typeof intersect.x !== 'number'
-    const NO_EQ_TEXT = 'no equilibrium – support capacity insufficient'
+    const NO_EQ_TEXT = obj.noEquilibrium === 'shotcrete'
+        ? 'no equilibrium – shotcrete fails (p_max reached)'
+        : 'no equilibrium – support capacity insufficient'
 
     const trace1 = {
         x: obj.groundCurve.x, y: obj.groundCurve.y,
@@ -589,11 +603,6 @@ export function updateGraphic(gamma, H, nu, E, D, c, phi, f_ck, E_c, nu_c, t_c,
             entries.push(legendOnly(lsc.inPlateau
                 ? `FS (shotcrete) = p_max,SpC / p_LSC = ${lsc.FS_shotcrete.toFixed(2)}`
                 : `FS (shotcrete) = ${lsc.FS_shotcrete.toFixed(2)}`))
-        }
-        // Equilibrium after the shotcrete has reached p_max,SpC (only the bolts still rise there):
-        // the shell is plastic, FS (shotcrete) = 1
-        if (!noEquilibrium && intersect.x >= shotcrete.x[shotcrete.x.length - 1] - EPS) {
-            entries.push(legendOnly('shotcrete at p_max (plastic) – limit state'))
         }
         if (lsc.boltUtilisation !== null) {
             entries.push(legendOnly(`bolt utilisation: ${(lsc.boltUtilisation * 100).toFixed(0)} %`))
